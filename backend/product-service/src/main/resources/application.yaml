@@ -4,3 +4,5 @@ spring:
 server:
   port: 8080
   
+jwt:
+  secret: ${JWT_SECRET:this-is-a-long-random-string-at-least-32-bytes-for-hs256}
