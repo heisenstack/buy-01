@@ -1,0 +1,53 @@
+package com.buy01.userservice.controller;
+
+import com.buy01.userservice.dto.RegisterRequest;
+import com.buy01.userservice.dto.UserResponse;
+import com.buy01.userservice.model.User;
+import com.buy01.userservice.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+import com.buy01.userservice.dto.LoginRequest;
+import com.buy01.userservice.security.JwtUtil;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        var userOpt = userRepository.findByEmail(request.getEmail());
+
+        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
+
+        User user = userOpt.get();
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getUsername());
+
+        return ResponseEntity.ok(java.util.Map.of("token", token));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.status(409).body("Email already registered");
+        }
+
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        User user = new User(request.getUsername(), request.getEmail(), hashedPassword, request.getRole());
+        User saved = userRepository.save(user);
+
+        return ResponseEntity.ok(new UserResponse(saved));
+    }
+}
