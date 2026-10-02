@@ -1,3 +1,17 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: gateway
+  
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:this-is-a-long-random-string-at-least-32-bytes-for-hs256}
