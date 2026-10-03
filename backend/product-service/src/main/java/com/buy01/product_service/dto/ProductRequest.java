@@ -6,6 +6,7 @@ public class ProductRequest {
     private String name;
     private String description;
     private double price;
+    private List<String> imageIds; 
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -13,4 +14,6 @@ public class ProductRequest {
     public void setDescription(String description) { this.description = description; }
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+    public List<String> getImageIds() { return imageIds; }
+    public void setImageIds(List<String> imageIds) { this.imageIds = imageIds; }
 }
