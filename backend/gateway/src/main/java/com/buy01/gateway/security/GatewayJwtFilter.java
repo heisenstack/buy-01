@@ -47,10 +47,12 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
 
                 String email = claims.getSubject();
                 String role = claims.get("role", String.class);
+                String username = claims.get("username", String.class);
 
                 HttpServletRequest wrapped = new HeaderInjectingRequestWrapper(request, Map.of(
                         "X-User-Email", email,
-                        "X-User-Role", role
+                        "X-User-Role", role,
+                        "X-User-Username", username
                 ));
 
                 chain.doFilter(wrapped, response);
@@ -64,6 +66,7 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
             }
         }
 
+        
         chain.doFilter(request, response);
     }
 
