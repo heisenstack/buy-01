@@ -1,12 +1,21 @@
 package com.buy01.product_service.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
 import java.util.List;
 
 public class ProductRequest {
+
+    @NotBlank(message = "Product name is required")
     private String name;
+
     private String description;
+
+    @Positive(message = "Price must be greater than 0")
     private double price;
-    private List<String> imageIds; 
+
+    private List<String> imageIds;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

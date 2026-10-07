@@ -4,12 +4,14 @@ import com.buy01.product_service.dto.ProductRequest;
 import com.buy01.product_service.model.Product;
 import com.buy01.product_service.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -31,7 +33,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody ProductRequest request, Authentication auth, HttpServletRequest httpRequest) {
+    public ResponseEntity<Product> create(@Valid @RequestBody ProductRequest request, Authentication auth, HttpServletRequest httpRequest) {
         String sellerEmail = auth.getName();
         String sellerName = httpRequest.getHeader("X-User-Username");
 
@@ -45,7 +47,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody ProductRequest request, Authentication auth) {
+    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody ProductRequest request, Authentication auth) {
         var existing = productRepository.findById(id);
 
         if (existing.isEmpty()) {
@@ -55,7 +57,7 @@ public class ProductController {
         Product product = existing.get();
 
         if (!product.getSellerEmail().equals(auth.getName())) {
-            return ResponseEntity.status(403).body("You do not own this product");
+            return ResponseEntity.status(403).body(Map.of("error", "You do not own this product"));
         }
 
         product.setName(request.getName());
@@ -86,7 +88,7 @@ public class ProductController {
         }
 
         if (!existing.get().getSellerEmail().equals(auth.getName())) {
-            return ResponseEntity.status(403).body("You do not own this product");
+            return ResponseEntity.status(403).body(Map.of("error", "You do not own this product"));
         }
 
         productRepository.deleteById(id);
