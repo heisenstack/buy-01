@@ -1,4 +1,4 @@
-package com.buy01.userservice.exception;
+package com.buy01.product_service.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
