@@ -30,3 +30,14 @@ eureka:
 jwt:
   secret: "this-is-a-long-random-string-at-least-32-bytes-for-hs256"
   expiration-ms: 3600000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
