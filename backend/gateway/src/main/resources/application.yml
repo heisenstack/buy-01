@@ -20,6 +20,13 @@ spring:
               filters:
                 - StripPrefix=2
 
+            - id: media-service
+              uri: lb://media-service
+              predicates:
+                - Path=/api/media/**
+              filters:
+                - StripPrefix=2
+
 eureka:
   client:
     service-url:
