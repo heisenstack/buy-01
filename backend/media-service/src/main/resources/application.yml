@@ -1,0 +1,39 @@
+server:
+  port: 8083
+  error:
+    include-stacktrace: never
+    include-message: never
+
+spring:
+  application:
+    name: media-service
+  mongodb:
+    uri: ${MONGO_URI:mongodb://admin:adminpass@localhost:27017/buy01_media?authSource=admin}
+  data:
+    mongodb:
+      spring.mongodb.database: buy01_media
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
