@@ -8,10 +8,10 @@ spring:
   application:
     name: media-service
   mongodb:
-    uri: ${MONGO_URI:mongodb://admin:adminpass@localhost:27017/buy01_media?authSource=admin}
+    uri: mongodb://admin:adminpass@localhost:27017/buy01_media?authSource=admin
   data:
     mongodb:
-      spring.mongodb.database: buy01_media
+      database: buy01_media
   servlet:
     multipart:
       max-file-size: 2MB

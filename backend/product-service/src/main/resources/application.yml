@@ -1,5 +1,8 @@
 server:
   port: 8082
+  error:
+    include-stacktrace: never
+    include-message: never
 
 spring:
   application:
@@ -25,8 +28,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-server:
-  error:
-    include-stacktrace: never
-    include-message: never
