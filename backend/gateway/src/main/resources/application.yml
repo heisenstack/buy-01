@@ -1,5 +1,11 @@
 server:
-  port: 8080
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: buy01
   error:
     include-stacktrace: never
     include-message: never
