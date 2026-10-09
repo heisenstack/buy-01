@@ -1,0 +1,142 @@
+services:
+  # ==========================================
+  # Database: MongoDB
+  # ==========================================
+  mongo:
+    image: mongo:7
+    container_name: buy01-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - buy01-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ==========================================
+  # Service Discovery: Eureka Server
+  # ==========================================
+  discovery:
+    build:
+      context: ./backend/discovery
+      dockerfile: Dockerfile
+    container_name: buy01-discovery
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    networks:
+      - buy01-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  # ==========================================
+  # Microservice: User Service
+  # ==========================================
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: buy01-user-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_URI: ${EUREKA_URI}
+      MONGO_URI_USERS: ${MONGO_URI_USERS}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+    networks:
+      - buy01-network
+    depends_on:
+      mongo:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+
+  # ==========================================
+  # Microservice: Product Service
+  # ==========================================
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    container_name: buy01-product-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_URI: ${EUREKA_URI}
+      MONGO_URI_PRODUCTS: ${MONGO_URI_PRODUCTS}
+    networks:
+      - buy01-network
+    depends_on:
+      mongo:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+
+  # ==========================================
+  # Microservice: Media Service
+  # ==========================================
+  media-service:
+    build:
+      context: ./backend/media-service
+      dockerfile: Dockerfile
+    container_name: buy01-media-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_URI: ${EUREKA_URI}
+      MONGO_URI_MEDIA: ${MONGO_URI_MEDIA}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    networks:
+      - buy01-network
+    depends_on:
+      mongo:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+
+  # ==========================================
+  # API Gateway: Spring Cloud Gateway
+  # ==========================================
+  gateway:
+    build:
+      context: ./backend/gateway
+      dockerfile: Dockerfile
+    container_name: buy01-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URI: ${EUREKA_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+    networks:
+      - buy01-network
+    depends_on:
+      discovery:
+        condition: service_healthy
+
+networks:
+  buy01-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
