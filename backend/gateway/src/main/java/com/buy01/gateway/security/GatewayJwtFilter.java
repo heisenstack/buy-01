@@ -19,12 +19,15 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class GatewayJwtFilter extends OncePerRequestFilter {
 
     @Value("${jwt.secret}")
     private String secret;
+
+    private static final Set<String> WRITE_METHODS = Set.of("POST", "PUT", "DELETE", "PATCH");
 
     private SecretKey key() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -34,7 +37,15 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        String method = request.getMethod();
         String header = request.getHeader("Authorization");
+
+        // Public GET endpoints — no token required
+        boolean isPublicGet = "GET".equals(method)
+                && (path.startsWith("/api/products/") || path.startsWith("/api/media/"));
+        // Auth endpoints — always public
+        boolean isAuthEndpoint = path.startsWith("/api/users/auth/");
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
@@ -49,11 +60,22 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
                 String username = claims.get("username", String.class);
 
+                // Enforce SELLER role for write operations on products and media
+                if (WRITE_METHODS.contains(method)) {
+                    boolean isProductWrite = path.startsWith("/api/products/");
+                    boolean isMediaWrite = path.startsWith("/api/media/");
+                    if ((isProductWrite || isMediaWrite) && !"SELLER".equals(role)) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Only SELLER accounts can perform this action\"}");
+                        return;
+                    }
+                }
+
                 HttpServletRequest wrapped = new HeaderInjectingRequestWrapper(request, Map.of(
-                        "X-User-Email", email,
-                        "X-User-Role", role,
-                        "X-User-Username", username
-                ));
+                        "X-User-Email", email != null ? email : "",
+                        "X-User-Role", role != null ? role : "",
+                        "X-User-Username", username != null ? username : ""));
 
                 chain.doFilter(wrapped, response);
                 return;
@@ -66,8 +88,14 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
             }
         }
 
-        
-        chain.doFilter(request, response);
+        // No token present — allow public endpoints, block protected ones
+        if (isPublicGet || isAuthEndpoint) {
+            chain.doFilter(request, response);
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Authentication required\"}");
+        }
     }
 
     private static class HeaderInjectingRequestWrapper extends HttpServletRequestWrapper {

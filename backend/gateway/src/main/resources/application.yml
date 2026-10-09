@@ -1,3 +1,9 @@
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+
 spring:
   application:
     name: gateway
@@ -20,13 +26,29 @@ spring:
               filters:
                 - StripPrefix=2
 
+            - id: media-service
+              uri: lb://media-service
+              predicates:
+                - Path=/api/media/**
+              filters:
+                - StripPrefix=2
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
 jwt:
-  secret: "this-is-a-long-random-string-at-least-32-bytes-for-hs256"
-  expiration-ms: 3600000
+  secret: ${JWT_SECRET:dev-local-secret-change-me}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
