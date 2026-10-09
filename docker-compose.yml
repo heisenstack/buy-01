@@ -134,6 +134,23 @@ services:
       discovery:
         condition: service_healthy
 
+  # ==========================================
+  # Frontend: Angular Application
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: buy01-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    networks:
+      - buy01-network
+    depends_on:
+      gateway:
+        condition: service_started
+
 networks:
   buy01-network:
     driver: bridge
