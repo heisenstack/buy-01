@@ -1,0 +1,119 @@
+<div class="detail-shell">
+  <button type="button" class="secondary back-button" routerLink="/">Back to catalog</button>
+
+  @if (loading()) {
+    <div class="detail-loading">Loading product...</div>
+  } @else if (error()) {
+    <p class="message error">{{ error() }}</p>
+  } @else if (product(); as currentProduct) {
+    <section class="product-detail-layout">
+      <div class="media-panel">
+        <div class="detail-header-row">
+          <div>
+            <p class="eyebrow">Product details</p>
+            <h1>{{ currentProduct.name }}</h1>
+          </div>
+
+          @if (isOwner(currentProduct)) {
+            <div class="owner-menu-wrap">
+              <button type="button" class="more-button" aria-label="Open product actions" (click)="toggleMenu()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a1.75 1.75 0 1 0 0-3.5A1.75 1.75 0 0 0 12 7Zm0 7.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Zm0 7.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Z"/></svg>
+              </button>
+
+              @if (menuOpen()) {
+                <div class="owner-menu-panel">
+                  <button type="button" class="menu-item" (click)="openEdit()">Update product</button>
+                  <button type="button" class="menu-item danger" (click)="deleteProduct()">Delete product</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <p class="media-caption">Image of the product</p>
+
+        <div class="gallery-main">
+          @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 0) {
+            <img [src]="'http://localhost:8080' + currentProduct.imageUrls[0]" [alt]="currentProduct.name">
+          } @else {
+            <div class="image-placeholder">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Zm3.5-7.5 2.2 2.7 3.1-4.1 5.7 7.4H5.5l2-3.9Z"/></svg>
+            </div>
+          }
+        </div>
+
+        @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 1) {
+          <div class="thumbnail-row">
+            @for (imageUrl of currentProduct.imageUrls; track imageUrl) {
+              <div class="thumb">
+                <img [src]="'http://localhost:8080' + imageUrl" [alt]="currentProduct.name">
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="detail-content">
+        <div class="price-row">
+          <span class="price">€{{ currentProduct.price | number: '1.2-2' }}</span>
+        </div>
+
+        <div class="status-row">
+          <span class="pill">{{ currentProduct.quantity ?? 1 }} available</span>
+          <span class="meta-user">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.33 0-6 1.79-6 4v1h12v-1c0-2.21-2.67-4-6-4Z"/></svg>
+            {{ currentProduct.sellerName || 'Seller' }}
+          </span>
+          <span class="timestamp">{{ currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now' }}</span>
+        </div>
+
+        <div class="description-block">
+          <h2>Description</h2>
+          <p>{{ currentProduct.description || 'No description provided yet.' }}</p>
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="meta-label">Available</span>
+            <span>{{ currentProduct.quantity ?? 1 }} units</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Posted</span>
+            <span>{{ currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now' }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    @if (isOwner(currentProduct) && isEditing()) {
+      <div class="edit-overlay" role="dialog" aria-modal="true" aria-label="Update product">
+        <div class="editor-block">
+          <div class="editor-header">
+            <div>
+              <p class="eyebrow">Edit product</p>
+              <h2>Update item details</h2>
+            </div>
+            <button type="button" class="close-button" aria-label="Close update form" (click)="isEditing.set(false)">×</button>
+          </div>
+
+          <label>Name</label>
+          <input type="text" [(ngModel)]="editName" name="editName">
+
+          <label>Description</label>
+          <textarea [(ngModel)]="editDescription" name="editDescription"></textarea>
+
+          <label>Price</label>
+          <input type="number" [(ngModel)]="editPrice" name="editPrice" step="0.01">
+
+          <label>Quantity</label>
+          <input type="number" [(ngModel)]="editQuantity" name="editQuantity" min="1" step="1">
+
+          <div class="actions">
+            <button type="button" (click)="saveEdit()">Save changes</button>
+            <button type="button" class="secondary" (click)="isEditing.set(false)">Cancel</button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

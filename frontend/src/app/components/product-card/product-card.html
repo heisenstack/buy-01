@@ -1,0 +1,33 @@
+<article class="product-card" [routerLink]="['/products', product.id]" role="link" tabindex="0">
+  <div class="product-card-top">
+    <span class="pill">{{ getQuantityLabel() }}</span>
+  </div>
+
+  @if (product.imageUrls && product.imageUrls.length > 0) {
+    <div class="product-image-wrap">
+      <img [src]="'http://localhost:8080' + product.imageUrls[0]" [alt]="product.name">
+    </div>
+  } @else {
+    <div class="product-image-placeholder">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Zm3.5-7.5 2.2 2.7 3.1-4.1 5.7 7.4H5.5l2-3.9Z"/></svg>
+    </div>
+  }
+
+  <div class="product-body">
+    <div class="product-topline">
+      <h3>{{ product.name }}</h3>
+      <span class="price-tag">€{{ product.price | number: '1.2-2' }}</span>
+    </div>
+
+    <p class="description">{{ product.description || 'No description provided yet.' }}</p>
+
+    <div class="meta-row">
+      <span class="meta-user">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.33 0-6 1.79-6 4v1h12v-1c0-2.21-2.67-4-6-4Z"/></svg>
+        {{ getSellerName() }}
+      </span>
+      <span class="timestamp">{{ getTimestamp() }}</span>
+    </div>
+
+  </div>
+</article>

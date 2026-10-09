@@ -1,0 +1,100 @@
+<div class="create-product-shell" [class.modal-shell]="mode === 'modal'">
+  <div class="create-product-header">
+    <div>
+      <p class="eyebrow">Create product</p>
+      <h2>List a New Product</h2>
+    </div>
+
+    @if (mode === 'modal') {
+      <button type="button" class="close-button" aria-label="Close product form" (click)="closeForm()">×</button>
+    }
+  </div>
+
+  <form class="create-product-form" (ngSubmit)="submit()">
+    <div class="field-group" [class.has-error]="fieldErrors()['name']">
+      <label>Name</label>
+      <input
+        type="text"
+        [(ngModel)]="name"
+        name="name"
+        placeholder="e.g. Handmade Ceramic Mug"
+        [class.invalid]="fieldErrors()['name']"
+        (input)="clearFieldError('name')"
+        required>
+      @if (fieldErrors()['name']) {
+        <small class="field-error">{{ fieldErrors()['name'] }}</small>
+      }
+    </div>
+
+    <div class="field-group" [class.has-error]="fieldErrors()['description']">
+      <label>Description</label>
+      <textarea
+        [(ngModel)]="description"
+        name="description"
+        placeholder="Describe the piece..."
+        [class.invalid]="fieldErrors()['description']"
+        (input)="clearFieldError('description')"
+        required></textarea>
+      @if (fieldErrors()['description']) {
+        <small class="field-error">{{ fieldErrors()['description'] }}</small>
+      }
+    </div>
+
+    <div class="two-column-fields">
+      <div class="field-group" [class.has-error]="fieldErrors()['price']">
+        <label>Price (€)</label>
+        <input
+          type="number"
+          [(ngModel)]="price"
+          name="price"
+          placeholder="0.00"
+          [class.invalid]="fieldErrors()['price']"
+          (input)="clearFieldError('price')"
+          required min="0" step="0.01">
+        @if (fieldErrors()['price']) {
+          <small class="field-error">{{ fieldErrors()['price'] }}</small>
+        }
+      </div>
+
+      <div class="field-group" [class.has-error]="fieldErrors()['quantity']">
+        <label>Quantity</label>
+        <input
+          type="number"
+          [(ngModel)]="quantity"
+          name="quantity"
+          placeholder="1"
+          [class.invalid]="fieldErrors()['quantity']"
+          (input)="clearFieldError('quantity')"
+          required min="1" step="1">
+        @if (fieldErrors()['quantity']) {
+          <small class="field-error">{{ fieldErrors()['quantity'] }}</small>
+        }
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Photo</label>
+      <label class="upload-box" for="product-image-upload">
+        <span class="upload-text">{{ selectedFile ? selectedFile.name : 'Choose image' }}</span>
+        <span class="upload-button">Upload</span>
+      </label>
+      <input id="product-image-upload" type="file" accept="image/*" (change)="onFileSelected($event)">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="primary-btn" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Creating...' : 'Create Product' }}
+      </button>
+
+      @if (mode === 'modal') {
+        <button type="button" class="secondary-btn" (click)="closeForm()">Cancel</button>
+      }
+    </div>
+  </form>
+
+  @if (message()) {
+    <p class="message" [class.error]="message()?.toLowerCase().includes('failed') || message()?.toLowerCase().includes('error') || message()?.toLowerCase().includes('upload')">
+      {{ message() }}
+    </p>
+  }
+</div>

@@ -1,0 +1,54 @@
+<header class="dashboard-header">
+  <div>
+    <p class="eyebrow">Seller dashboard</p>
+    <h1>My Dashboard</h1>
+  </div>
+  <div class="dashboard-summary">
+    <div class="summary-card">
+      <span class="summary-label">Products</span>
+      <strong>{{ products().length }}</strong>
+    </div>
+    <div class="summary-card">
+      <span class="summary-label">Inventory</span>
+      <strong>{{ totalInventory() }}</strong>
+    </div>
+  </div>
+</header>
+
+<app-create-product (productCreated)="onProductCreated()"></app-create-product>
+
+<div class="section-header">
+  <h2>My Products</h2>
+</div>
+
+@if (error()) {
+  <p class="message error">{{ error() }}</p>
+}
+
+@if (loading()) {
+  <div class="loading-shell" aria-live="polite" aria-busy="true">
+    @for (item of [1,2,3]; track item) {
+      <div class="skeleton-card">
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    }
+  </div>
+} @else if (products().length === 0 && !error()) {
+  <p class="empty-state">No products yet.</p>
+} @else {
+  <div class="catalog-grid">
+    @for (product of products(); track product.id) {
+      @if (isOwner(product)) {
+        <app-product-card
+          [product]="product"
+          [isOwner]="true"
+          [showOwnerMenu]="true"
+          (edit)="startEdit(product)"
+          (delete)="deleteProduct(product)">
+        </app-product-card>
+      }
+    }
+  </div>
+}

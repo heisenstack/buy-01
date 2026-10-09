@@ -1,0 +1,125 @@
+:host {
+  display: block;
+}
+
+.panel {
+  max-width: 520px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.93));
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+}
+
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.form-row {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.form-row input,
+.form-row select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  background: rgba(248,250,252,0.82);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.form-row input.invalid,
+.form-row select.invalid {
+  border-color: rgba(239,68,68,0.6);
+  background: rgba(254,242,242,0.85);
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.field-hint {
+  font-size: 0.74rem;
+  color: var(--muted-soft);
+}
+
+.auth-actions {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+.auth-switch {
+  justify-self: center;
+  width: auto;
+  margin-top: 0.25rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.34rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.user-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0 0.8rem;
+}
+
+.user-welcome p {
+  margin: 0;
+}
+
+.message {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid rgba(43, 122, 99, 0.12);
+  font-weight: 600;
+}
+
+.message.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: rgba(211, 93, 93, 0.14);
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 1.35rem 1rem;
+    border-radius: 22px;
+  }
+}

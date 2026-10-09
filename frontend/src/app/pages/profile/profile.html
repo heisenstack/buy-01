@@ -1,0 +1,112 @@
+<section class="profile-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Account</p>
+      <h1>My Profile</h1>
+    </div>
+  </header>
+
+  <div class="profile-shell">
+    @if (loading()) {
+      <div class="loading-shell" aria-live="polite" aria-busy="true">
+        <div class="skeleton-card">
+          <div class="skeleton-line long"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    } @else if (profile(); as p) {
+      <div class="profile-layout">
+        <aside class="profile-summary-card">
+          <div class="avatar-panel">
+            <div class="avatar-wrap">
+              @if (currentAvatarUrl) {
+                <img [src]="currentAvatarUrl" alt="Profile avatar" />
+              } @else {
+                <div class="avatar-placeholder">{{ p.username.charAt(0).toUpperCase() }}</div>
+              }
+            </div>
+
+          </div>
+
+          <div class="summary-info">
+            <span class="mini-label">Member</span>
+            <h2>{{ p.username }}</h2>
+            <p>{{ p.email }}</p>
+            <span class="badge">{{ p.role }}</span>
+          </div>
+        </aside>
+
+        <div class="profile-form-card">
+          <div class="form-header">
+            <div>
+              <p class="eyebrow">Profile settings</p>
+              <h2>Account details</h2>
+            </div>
+
+            @if (!isEditing()) {
+              <button type="button" class="primary-btn" (click)="startEditing()">Edit profile</button>
+            }
+          </div>
+
+          @if (isEditing()) {
+            <form class="profile-form" (ngSubmit)="saveProfile()">
+              <div class="field-group">
+                <label for="username">Username</label>
+                <input id="username" type="text" [(ngModel)]="usernameInput" name="username" placeholder="Your username">
+              </div>
+
+              <div class="field-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" [(ngModel)]="emailInput" name="email" placeholder="you@example.com">
+              </div>
+
+              <div class="field-group">
+                <label for="profile-avatar-input">Avatar</label>
+                <label class="file-picker" for="profile-avatar-input">
+                  <input id="profile-avatar-input" type="file" accept="image/*" (change)="onFileSelected($event)">
+                  <span>{{ selectedFile ? selectedFile.name : 'Choose a new photo' }}</span>
+                </label>
+
+                @if (selectedAvatarPreview) {
+                  <div class="avatar-preview-box">
+                    <span class="mini-label">New avatar preview</span>
+                    <img [src]="selectedAvatarPreview" alt="New avatar preview" />
+                  </div>
+                }
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="primary-btn" [disabled]="submitting()">
+                  {{ submitting() ? 'Saving...' : 'Save changes' }}
+                </button>
+                <button type="button" class="secondary-btn" (click)="cancelEditing()">Cancel</button>
+              </div>
+            </form>
+          } @else {
+            <div class="detail-list">
+              <div class="detail-row">
+                <span class="detail-label">Username</span>
+                <strong>{{ p.username }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Email</span>
+                <strong>{{ p.email }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role</span>
+                <strong>{{ p.role }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (message()) {
+      <p class="message" [class.error]="isMessageError">
+        {{ message() }}
+      </p>
+    }
+  </div>
+</section>
