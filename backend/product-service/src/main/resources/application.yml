@@ -8,15 +8,12 @@ spring:
   application:
     name: product-service
   mongodb:
-    uri: mongodb://admin:adminpass@localhost:27017/buy01_products?authSource=admin
-  data:
-    mongodb:
-      spring.mongodb.database: buy01_products
+    uri: ${MONGO_URI_PRODUCTS}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI}
   instance:
     prefer-ip-address: true
 

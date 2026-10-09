@@ -36,13 +36,13 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI}
   instance:
     prefer-ip-address: true
 
 jwt:
-  secret: "this-is-a-long-random-string-at-least-32-bytes-for-hs256"
-  expiration-ms: 3600000
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS}
 
 management:
   endpoints:
