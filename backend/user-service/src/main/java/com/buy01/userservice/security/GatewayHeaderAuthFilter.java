@@ -22,9 +22,6 @@ public class GatewayHeaderAuthFilter extends OncePerRequestFilter {
 
         String email = request.getHeader("X-User-Email");
         String role = request.getHeader("X-User-Role");
-        System.out.println(email);
-        System.out.println(role);
-
 
         if (email != null && role != null) {
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));

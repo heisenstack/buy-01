@@ -73,7 +73,7 @@ public class MediaController {
     public ResponseEntity<?> getImage(@PathVariable String id) {
         var mediaOpt = mediaRepository.findById(id);
         if (mediaOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body(Map.of("error", "Image not found"));
         }
 
         Media media = mediaOpt.get();
@@ -87,7 +87,7 @@ public class MediaController {
     public ResponseEntity<?> delete(@PathVariable String id, Authentication auth) {
         var mediaOpt = mediaRepository.findById(id);
         if (mediaOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body(Map.of("error", "Image not found"));
         }
 
         Media media = mediaOpt.get();
@@ -98,7 +98,6 @@ public class MediaController {
         try {
             cloudinaryStorageService.delete(media.getPublicId());
         } catch (IOException ignored) {
-            // Log or ignore if already removed from Cloudinary
         }
 
         mediaRepository.deleteById(id);
