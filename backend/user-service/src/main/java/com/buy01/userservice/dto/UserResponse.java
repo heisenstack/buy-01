@@ -1,7 +1,9 @@
 package com.buy01.userservice.dto;
 
 import com.buy01.userservice.model.User;
+import lombok.Data;
 
+@Data
 public class UserResponse {
     private String id;
     private String email;
@@ -16,10 +18,4 @@ public class UserResponse {
         this.role = user.getRole();
         this.avatarUrl = user.getAvatarUrl();
     }
-
-    public String getId() { return id; }
-    public String getEmail() { return email; }
-    public User.Role getRole() { return role; }
-    public String getAvatarUrl() { return avatarUrl; }
-    public String getUsername() { return username; }
 }

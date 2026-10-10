@@ -2,10 +2,15 @@ package com.buy01.product_service.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductRequest {
 
     @NotBlank(message = "Name is required.")
@@ -21,15 +26,4 @@ public class ProductRequest {
     private int quantity = 1;
 
     private List<String> imageIds;
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    public List<String> getImageIds() { return imageIds; }
-    public void setImageIds(List<String> imageIds) { this.imageIds = imageIds; }
 }

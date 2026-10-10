@@ -12,7 +12,7 @@ export interface MediaResponse {
 
 @Injectable({ providedIn: 'root' })
 export class MediaService {
-  private baseUrl = 'http://localhost:8080/api/media/media/images';
+  private baseUrl = 'https://localhost:8443/api/media/media/images';
 
   constructor(private http: HttpClient) {}
 

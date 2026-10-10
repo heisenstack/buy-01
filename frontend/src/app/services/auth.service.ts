@@ -23,7 +23,7 @@ const TOKEN_KEY = 'token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private baseUrl = 'http://localhost:8080/api/users/auth';
+  private baseUrl = 'https://localhost:8443/api/users/auth';
 
   token = signal<string | null>(null);
   currentUser = signal<DecodedUser | null>(null);
@@ -46,11 +46,11 @@ export class AuthService {
   }
 
   getMe(): Observable<UserProfile> {
-    return this.http.get<UserProfile>('http://localhost:8080/api/users/me');
+    return this.http.get<UserProfile>('https://localhost:8443/api/users/me');
   }
 
   updateProfile(profile: { username?: string; email?: string; avatarMediaId?: string }): Observable<UserProfile> {
-    return this.http.put<UserProfile>('http://localhost:8080/api/users/me', profile).pipe(
+    return this.http.put<UserProfile>('https://localhost:8443/api/users/me', profile).pipe(
       tap((updatedProfile) => {
         this.profile.set(updatedProfile);
 

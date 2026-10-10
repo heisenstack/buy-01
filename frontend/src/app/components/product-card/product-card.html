@@ -5,7 +5,7 @@
 
   @if (product.imageUrls && product.imageUrls.length > 0) {
     <div class="product-image-wrap">
-      <img [src]="'http://localhost:8080' + product.imageUrls[0]" [alt]="product.name">
+      <img [src]="'https://localhost:8443' + product.imageUrls[0]" [alt]="product.name">
     </div>
   } @else {
     <div class="product-image-placeholder">

@@ -3,7 +3,7 @@ package com.buy01.media_service.controller;
 import com.buy01.media_service.model.Media;
 import com.buy01.media_service.repository.MediaRepository;
 import com.buy01.media_service.service.CloudinaryStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +15,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/media/images")
+@RequiredArgsConstructor
 public class MediaController {
 
     private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2 MB
 
-    @Autowired
-    private MediaRepository mediaRepository;
+    private final MediaRepository mediaRepository;
 
-    @Autowired
-    private CloudinaryStorageService cloudinaryStorageService;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
     @PostMapping
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, Authentication auth) {

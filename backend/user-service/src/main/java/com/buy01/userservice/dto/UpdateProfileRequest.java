@@ -2,7 +2,13 @@ package com.buy01.userservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateProfileRequest {
     private String avatarMediaId;
 
@@ -11,13 +17,4 @@ public class UpdateProfileRequest {
 
     @Email(message = "Please enter a valid email address.")
     private String email;
-
-    public String getAvatarMediaId() { return avatarMediaId; }
-    public void setAvatarMediaId(String avatarMediaId) { this.avatarMediaId = avatarMediaId; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
 }

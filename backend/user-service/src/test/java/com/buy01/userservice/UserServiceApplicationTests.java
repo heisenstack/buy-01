@@ -1,4 +1,4 @@
-package com.buy01.user_service;
+package com.buy01.userservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -5,6 +5,7 @@ import com.buy01.userservice.dto.UserResponse;
 import com.buy01.userservice.model.User;
 import com.buy01.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,13 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class ProfileController {
 
     private final UserRepository userRepository;
-
-    public ProfileController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
