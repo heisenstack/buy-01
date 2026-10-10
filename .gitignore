@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 *.local
+*.p12
+*.jks
 
 # Build output
 target/

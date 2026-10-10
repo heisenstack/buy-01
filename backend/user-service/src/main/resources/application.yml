@@ -8,18 +8,18 @@ spring:
   application:
     name: user-service
   mongodb:
-    uri: ${MONGO_URI_USERS:mongodb://localhost:27017/buy01_users}
+    uri: ${MONGO_URI_USERS}
 
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_URI}
   instance:
     prefer-ip-address: true
 
 jwt:
-  secret: ${JWT_SECRET:dev-local-secret-change-me}
-  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS}
 
 management:
   endpoints:

@@ -1,5 +1,11 @@
 server:
-  port: 8080
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: buy01
   error:
     include-stacktrace: never
     include-message: never
@@ -36,13 +42,13 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_URI}
   instance:
     prefer-ip-address: true
 
 jwt:
-  secret: ${JWT_SECRET:dev-local-secret-change-me}
-  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS}
 
 management:
   endpoints:
