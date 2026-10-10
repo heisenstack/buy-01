@@ -1,7 +1,4 @@
 services:
-  # ==========================================
-  # Database: MongoDB
-  # ==========================================
   mongo:
     image: mongo:7
     container_name: buy01-mongo
@@ -15,40 +12,22 @@ services:
       - mongo_data:/data/db
     networks:
       - buy01-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
-  # ==========================================
-  # Service Discovery: Eureka Server
-  # ==========================================
   discovery:
     build:
       context: ./backend/discovery
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-discovery
     restart: unless-stopped
     ports:
       - "8761:8761"
     networks:
       - buy01-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 25s
 
-  # ==========================================
-  # Microservice: User Service
-  # ==========================================
   user-service:
     build:
       context: ./backend/user-service
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-user-service
     restart: unless-stopped
     ports:
@@ -61,18 +40,13 @@ services:
     networks:
       - buy01-network
     depends_on:
-      mongo:
-        condition: service_healthy
-      discovery:
-        condition: service_healthy
+      - mongo
+      - discovery
 
-  # ==========================================
-  # Microservice: Product Service
-  # ==========================================
   product-service:
     build:
       context: ./backend/product-service
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-product-service
     restart: unless-stopped
     ports:
@@ -83,18 +57,13 @@ services:
     networks:
       - buy01-network
     depends_on:
-      mongo:
-        condition: service_healthy
-      discovery:
-        condition: service_healthy
+      - mongo
+      - discovery
 
-  # ==========================================
-  # Microservice: Media Service
-  # ==========================================
   media-service:
     build:
       context: ./backend/media-service
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-media-service
     restart: unless-stopped
     ports:
@@ -108,39 +77,32 @@ services:
     networks:
       - buy01-network
     depends_on:
-      mongo:
-        condition: service_healthy
-      discovery:
-        condition: service_healthy
+      - mongo
+      - discovery
 
-  # ==========================================
-  # API Gateway: Spring Cloud Gateway
-  # ==========================================
   gateway:
     build:
       context: ./backend/gateway
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-gateway
     restart: unless-stopped
     ports:
       - "8080:8080"
+      - "8443:8443"
     environment:
       EUREKA_URI: ${EUREKA_URI}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD}
     networks:
       - buy01-network
     depends_on:
-      discovery:
-        condition: service_healthy
+      - discovery
 
-  # ==========================================
-  # Frontend: Angular Application
-  # ==========================================
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      network: host
     container_name: buy01-frontend
     restart: unless-stopped
     ports:
@@ -148,8 +110,7 @@ services:
     networks:
       - buy01-network
     depends_on:
-      gateway:
-        condition: service_started
+      - gateway
 
 networks:
   buy01-network:
