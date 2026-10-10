@@ -34,7 +34,7 @@
 
         <div class="gallery-main">
           @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 0) {
-            <img [src]="'https://localhost:8443' + currentProduct.imageUrls[0]" [alt]="currentProduct.name">
+            <img [src]="currentProduct.imageUrls[0]" [alt]="currentProduct.name">
           } @else {
             <div class="image-placeholder">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Zm3.5-7.5 2.2 2.7 3.1-4.1 5.7 7.4H5.5l2-3.9Z"/></svg>
@@ -46,7 +46,7 @@
           <div class="thumbnail-row">
             @for (imageUrl of currentProduct.imageUrls; track imageUrl) {
               <div class="thumb">
-                <img [src]="'https://localhost:8443' + imageUrl" [alt]="currentProduct.name">
+                <img [src]="imageUrl" [alt]="currentProduct.name">
               </div>
             }
           </div>

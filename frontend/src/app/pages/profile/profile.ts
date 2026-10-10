@@ -30,7 +30,7 @@ export class Profile implements OnInit {
 
   get currentAvatarUrl(): string | null {
     const avatarUrl = this.profile()?.avatarUrl;
-    return avatarUrl ? 'https://localhost:8443' + avatarUrl : null;
+    return avatarUrl ? avatarUrl : null;
   }
 
   get isMessageError(): boolean {

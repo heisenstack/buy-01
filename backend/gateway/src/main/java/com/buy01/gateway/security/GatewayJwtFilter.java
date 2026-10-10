@@ -46,6 +46,8 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
                 && (path.startsWith("/api/products/") || path.startsWith("/api/media/"));
         // Auth endpoints — always public
         boolean isAuthEndpoint = path.startsWith("/api/users/auth/");
+        // Actuator health endpoints — always public
+        boolean isActuator = path.startsWith("/actuator");
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
@@ -89,7 +91,7 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
         }
 
         // No token present — allow public endpoints, block protected ones
-        if (isPublicGet || isAuthEndpoint) {
+        if (isPublicGet || isAuthEndpoint || isActuator) {
             chain.doFilter(request, response);
         } else {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
