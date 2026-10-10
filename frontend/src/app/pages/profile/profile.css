@@ -194,6 +194,18 @@
   box-sizing: border-box;
 }
 
+.field-group.has-error input,
+.field-group input.invalid {
+  border-color: #ef4444;
+  background: rgba(254, 242, 242, 0.8);
+}
+
+.field-error {
+  color: #b91c1c;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 .avatar-preview-box {
   display: grid;
   gap: 0.5rem;
@@ -324,4 +336,3 @@
     padding: 1rem;
   }
 }
-

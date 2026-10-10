@@ -51,14 +51,34 @@
 
           @if (isEditing()) {
             <form class="profile-form" (ngSubmit)="saveProfile()">
-              <div class="field-group">
+              <div class="field-group" [class.has-error]="fieldErrors()['username']">
                 <label for="username">Username</label>
-                <input id="username" type="text" [(ngModel)]="usernameInput" name="username" placeholder="Your username">
+                <input
+                  id="username"
+                  type="text"
+                  [(ngModel)]="usernameInput"
+                  name="username"
+                  placeholder="Your username"
+                  [class.invalid]="fieldErrors()['username']"
+                  (input)="clearFieldError('username')">
+                @if (fieldErrors()['username']) {
+                  <small class="field-error">{{ fieldErrors()['username'] }}</small>
+                }
               </div>
 
-              <div class="field-group">
+              <div class="field-group" [class.has-error]="fieldErrors()['email']">
                 <label for="email">Email</label>
-                <input id="email" type="email" [(ngModel)]="emailInput" name="email" placeholder="you@example.com">
+                <input
+                  id="email"
+                  type="email"
+                  [(ngModel)]="emailInput"
+                  name="email"
+                  placeholder="you@example.com"
+                  [class.invalid]="fieldErrors()['email']"
+                  (input)="clearFieldError('email')">
+                @if (fieldErrors()['email']) {
+                  <small class="field-error">{{ fieldErrors()['email'] }}</small>
+                }
               </div>
 
               <div class="field-group">

@@ -21,6 +21,18 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping
+    public Page<Product> all(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(1, Math.min(size, 20));
+
+        return productRepository.findAll(
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+    }
+    
+    @GetMapping
     public List<Product> all() {
         return productRepository.findAll();
     }

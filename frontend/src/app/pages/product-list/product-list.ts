@@ -18,7 +18,11 @@ export class ProductList implements OnInit {
   products = signal<Product[]>([]);
   error = signal<string | null>(null);
   loading = signal(false);
+  loadingMore = signal(false);
   showCreateModal = signal(false);
+  currentPage = signal(0);
+  hasMore = signal(true);
+  private readonly pageSize = 20;
 
   constructor(
     private productService: ProductService,
@@ -28,6 +32,11 @@ export class ProductList implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+  }
+
+  loadMore(): void {
+    if (!this.hasMore() || this.loadingMore()) return;
+    this.loadProducts(true);
   }
 
   isOwner(product: Product): boolean {
@@ -42,18 +51,33 @@ export class ProductList implements OnInit {
     });
   }
 
-  loadProducts(): void {
-    this.loading.set(true);
+  loadProducts(append: boolean = false): void {
+    if (!append) {
+      this.loading.set(true);
+      this.products.set([]);
+      this.currentPage.set(0);
+      this.hasMore.set(true);
+    } else {
+      this.loadingMore.set(true);
+    }
+
     this.error.set(null);
 
-    this.productService.getAll().subscribe({
-      next: (data) => {
-        this.products.set(this.sortNewestFirst(data));
+    this.productService.getPage(this.currentPage(), this.pageSize).subscribe({
+      next: (page) => {
+        const nextProducts = this.sortNewestFirst(page.content);
+        const mergedProducts = append ? [...this.products(), ...nextProducts] : nextProducts;
+
+        this.products.set(this.sortNewestFirst(mergedProducts));
+        this.hasMore.set(!page.last);
+        this.currentPage.set(page.number + 1);
         this.loading.set(false);
+        this.loadingMore.set(false);
       },
       error: (err) => {
         this.error.set(extractErrorMessage(err, 'Unable to load products right now.'));
         this.loading.set(false);
+        this.loadingMore.set(false);
       }
     });
   }

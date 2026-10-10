@@ -22,6 +22,7 @@ export class Profile implements OnInit {
   selectedAvatarPreview: string | null = null;
   usernameInput = '';
   emailInput = '';
+  fieldErrors = signal<Record<string, string>>({});
 
   constructor(
     private authService: AuthService,
@@ -30,7 +31,7 @@ export class Profile implements OnInit {
 
   get currentAvatarUrl(): string | null {
     const avatarUrl = this.profile()?.avatarUrl;
-    return avatarUrl ? avatarUrl : null;
+    return avatarUrl ? 'http://localhost:8080' + avatarUrl : null;
   }
 
   get isMessageError(): boolean {
@@ -72,6 +73,52 @@ export class Profile implements OnInit {
     this.selectedAvatarPreview = URL.createObjectURL(file);
   }
 
+  clearFieldError(field: string): void {
+    const current = this.fieldErrors();
+    if (!current[field]) return;
+
+    const next = { ...current };
+    delete next[field];
+    this.fieldErrors.set(next);
+  }
+
+  private validateProfile(): Record<string, string> {
+    const errors: Record<string, string> = {};
+    const username = this.usernameInput.trim();
+    const email = this.emailInput.trim();
+
+    if (!username) {
+      errors['username'] = 'Username is required.';
+    } else if (username.length < 2) {
+      errors['username'] = 'Username must be at least 2 characters.';
+    }
+
+    if (!email) {
+      errors['email'] = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors['email'] = 'Enter a valid email address.';
+    }
+
+    return errors;
+  }
+
+  private applyServerFieldErrors(err: any): void {
+    const body = err?.error ?? err?.body ?? {};
+    const mapped: Record<string, string> = {};
+
+    if (body && typeof body === 'object') {
+      Object.entries(body).forEach(([key, value]) => {
+        if (['username', 'email'].includes(key) && typeof value === 'string' && value.trim()) {
+          mapped[key] = value;
+        }
+      });
+    }
+
+    if (Object.keys(mapped).length > 0) {
+      this.fieldErrors.set({ ...this.fieldErrors(), ...mapped });
+    }
+  }
+
   startEditing(): void {
     const current = this.profile();
     if (!current) return;
@@ -79,6 +126,7 @@ export class Profile implements OnInit {
     this.usernameInput = current.username || '';
     this.emailInput = current.email || '';
     this.selectedAvatarPreview = null;
+    this.fieldErrors.set({});
     this.isEditing.set(true);
     this.message.set(null);
   }
@@ -87,6 +135,7 @@ export class Profile implements OnInit {
     this.isEditing.set(false);
     this.selectedFile = null;
     this.selectedAvatarPreview = null;
+    this.fieldErrors.set({});
     this.message.set(null);
   }
 
@@ -94,14 +143,14 @@ export class Profile implements OnInit {
     const current = this.profile();
     if (!current) return;
 
-    const username = this.usernameInput.trim();
-    const email = this.emailInput.trim();
-
-    if (!username || !email) {
-      this.message.set('Username and email are required.');
+    const validationErrors = this.validateProfile();
+    if (Object.keys(validationErrors).length > 0) {
+      this.fieldErrors.set(validationErrors);
+      this.message.set('Please fix the highlighted fields.');
       return;
     }
 
+    this.fieldErrors.set({});
     this.submitting.set(true);
     this.message.set('Saving profile...');
 
@@ -115,9 +164,11 @@ export class Profile implements OnInit {
           this.selectedFile = null;
           this.isEditing.set(false);
           this.message.set('Profile updated successfully.');
+          this.fieldErrors.set({});
           this.submitting.set(false);
         },
         error: (err) => {
+          this.applyServerFieldErrors(err);
           this.message.set(extractErrorMessage(err, 'Failed to update profile.'));
           this.submitting.set(false);
         }
@@ -125,13 +176,13 @@ export class Profile implements OnInit {
     };
 
     if (!this.selectedFile) {
-      submitProfileUpdate({ username, email });
+      submitProfileUpdate({ username: this.usernameInput.trim(), email: this.emailInput.trim() });
       return;
     }
 
     this.mediaService.upload(this.selectedFile).subscribe({
       next: (media) => {
-        submitProfileUpdate({ username, email, avatarMediaId: media.id });
+        submitProfileUpdate({ username: this.usernameInput.trim(), email: this.emailInput.trim(), avatarMediaId: media.id });
       },
       error: (err) => {
         this.message.set(extractErrorMessage(err, 'Avatar upload failed.'));

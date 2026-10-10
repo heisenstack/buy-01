@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Product {
   id: string;
@@ -14,14 +15,28 @@ export interface Product {
   imageUrls: string[];
 }
 
+export interface PagedProducts {
+  content: Product[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  private baseUrl = '/api/products/products';
+  private baseUrl = 'http://localhost:8080/api/products/products';
 
   constructor(private http: HttpClient) {}
 
+  getPage(page: number = 0, size: number = 20): Observable<PagedProducts> {
+    return this.http.get<PagedProducts>(`${this.baseUrl}?page=${page}&size=${size}`);
+  }
+
   getAll(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.baseUrl);
+    return this.getPage(0, 20).pipe(map((response) => response.content));
   }
 
   getById(id: string): Observable<Product> {

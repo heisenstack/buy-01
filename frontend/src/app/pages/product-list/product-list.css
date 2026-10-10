@@ -39,6 +39,34 @@
   align-items: stretch;
 }
 
+.load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.load-more-button {
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: white;
+  color: var(--primary-strong);
+  font: inherit;
+  font-weight: 700;
+  padding: 0.8rem 1.3rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.load-more-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.load-more-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .product-card {
   display: flex;
   flex-direction: column;

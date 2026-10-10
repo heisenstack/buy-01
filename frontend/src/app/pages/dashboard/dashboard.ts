@@ -18,6 +18,10 @@ export class Dashboard implements OnInit {
   products = signal<Product[]>([]);
   error = signal<string | null>(null);
   loading = signal(false);
+  loadingMore = signal(false);
+  currentPage = signal(0);
+  hasMore = signal(true);
+  private readonly pageSize = 20;
 
   constructor(
     private productService: ProductService,
@@ -29,6 +33,11 @@ export class Dashboard implements OnInit {
     this.loadProducts();
   }
 
+  loadMore(): void {
+    if (!this.hasMore() || this.loadingMore()) return;
+    this.loadProducts(true);
+  }
+
   private sortNewestFirst(items: Product[]): Product[] {
     return [...items].sort((a, b) => {
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -37,18 +46,33 @@ export class Dashboard implements OnInit {
     });
   }
 
-  loadProducts(): void {
-    this.loading.set(true);
+  loadProducts(append: boolean = false): void {
+    if (!append) {
+      this.loading.set(true);
+      this.products.set([]);
+      this.currentPage.set(0);
+      this.hasMore.set(true);
+    } else {
+      this.loadingMore.set(true);
+    }
+
     this.error.set(null);
 
-    this.productService.getAll().subscribe({
-      next: (data) => {
-        this.products.set(this.sortNewestFirst(data));
+    this.productService.getPage(this.currentPage(), this.pageSize).subscribe({
+      next: (page) => {
+        const nextProducts = this.sortNewestFirst(page.content);
+        const mergedProducts = append ? [...this.products(), ...nextProducts] : nextProducts;
+
+        this.products.set(this.sortNewestFirst(mergedProducts));
+        this.hasMore.set(!page.last);
+        this.currentPage.set(page.number + 1);
         this.loading.set(false);
+        this.loadingMore.set(false);
       },
       error: (err) => {
         this.error.set(extractErrorMessage(err, 'Unable to load your products.'));
         this.loading.set(false);
+        this.loadingMore.set(false);
       }
     });
   }

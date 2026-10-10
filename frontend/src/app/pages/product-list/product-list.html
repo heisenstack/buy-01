@@ -46,4 +46,12 @@
       </app-product-card>
     }
   </div>
+
+  @if (hasMore()) {
+    <div class="load-more-row">
+      <button type="button" class="load-more-button" [disabled]="loadingMore()" (click)="loadMore()">
+        {{ loadingMore() ? 'Loading...' : 'Load more products' }}
+      </button>
+    </div>
+  }
 }
