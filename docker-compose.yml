@@ -3,8 +3,6 @@ services:
     image: mongo:7
     container_name: buy01-mongo
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -18,8 +16,8 @@ services:
       context: ./backend/discovery
     container_name: buy01-discovery
     restart: unless-stopped
-    ports:
-      - "8761:8761"
+    expose:
+      - "8761"
     networks:
       - buy01-network
 
@@ -28,8 +26,8 @@ services:
       context: ./backend/user-service
     container_name: buy01-user-service
     restart: unless-stopped
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
     environment:
       EUREKA_URI: ${EUREKA_URI}
       MONGO_URI_USERS: ${MONGO_URI_USERS}
@@ -46,8 +44,8 @@ services:
       context: ./backend/product-service
     container_name: buy01-product-service
     restart: unless-stopped
-    ports:
-      - "8082:8082"
+    expose:
+      - "8082"
     environment:
       EUREKA_URI: ${EUREKA_URI}
       MONGO_URI_PRODUCTS: ${MONGO_URI_PRODUCTS}
@@ -62,8 +60,8 @@ services:
       context: ./backend/media-service
     container_name: buy01-media-service
     restart: unless-stopped
-    ports:
-      - "8083:8083"
+    expose:
+      - "8083"
     environment:
       EUREKA_URI: ${EUREKA_URI}
       MONGO_URI_MEDIA: ${MONGO_URI_MEDIA}
@@ -93,6 +91,9 @@ services:
       - buy01-network
     depends_on:
       - discovery
+      - user-service
+      - product-service
+      - media-service
 
   frontend:
     build:

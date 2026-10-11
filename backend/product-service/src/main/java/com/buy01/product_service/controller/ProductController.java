@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Map;
@@ -30,11 +33,6 @@ public class ProductController {
         return productRepository.findAll(
                 PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
-    }
-    
-    @GetMapping
-    public List<Product> all() {
-        return productRepository.findAll();
     }
 
     @GetMapping("/{id}")
