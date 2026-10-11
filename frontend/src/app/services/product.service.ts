@@ -27,7 +27,7 @@ export interface PagedProducts {
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  private baseUrl = '/api/products/products';
+  private baseUrl = 'https://localhost:8443/api/products/products';
 
   constructor(private http: HttpClient) {}
 
