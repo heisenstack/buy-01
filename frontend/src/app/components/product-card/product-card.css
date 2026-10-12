@@ -75,10 +75,13 @@
   place-items: center;
 }
 
-.product-image-placeholder svg {
+.product-image-placeholder mat-icon {
+  display: block;
   width: 48px;
   height: 48px;
-  fill: #b7c3e5;
+  font-size: 48px;
+  line-height: 48px;
+  color: #b7c3e5;
 }
 
 .product-body {
@@ -145,10 +148,12 @@
   color: var(--muted);
 }
 
-.meta-user svg {
+.meta-user mat-icon {
+  display: block;
   width: 0.9rem;
   height: 0.9rem;
-  fill: currentColor;
+  font-size: 0.9rem;
+  line-height: 0.9rem;
 }
 
 @media (max-width: 640px) {

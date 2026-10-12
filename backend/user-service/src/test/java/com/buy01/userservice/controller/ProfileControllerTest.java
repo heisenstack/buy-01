@@ -28,34 +28,33 @@ class ProfileControllerTest {
     private ProfileController profileController;
 
     @Test
-    void updateMe_returnsConflictWhenEmailAlreadyExists() {
+    void updateMe_rejectsEmailChange() {
         User currentUser = new User("Alice", "alice@test.com", "hashed", User.Role.CLIENT);
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("alice@test.com");
         when(userRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(currentUser));
-        when(userRepository.findByEmail("taken@test.com")).thenReturn(Optional.of(new User("Bob", "taken@test.com", "hashed", User.Role.CLIENT)));
 
         UpdateProfileRequest request = new UpdateProfileRequest();
-        request.setEmail("taken@test.com");
+        request.setEmail("new-alice@test.com");
 
         ResponseEntity<?> response = profileController.updateMe(request, authentication);
 
-        assertEquals(409, response.getStatusCode().value());
-        assertTrue(((Map<?, ?>) response.getBody()).get("error").toString().contains("already"));
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Email address cannot be changed.", ((Map<?, ?>) response.getBody()).get("error"));
+        assertEquals("alice@test.com", currentUser.getEmail());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void updateMe_updatesUsernameAndEmailWhenValid() {
+    void updateMe_updatesUsernameWithoutChangingEmail() {
         User currentUser = new User("Alice", "alice@test.com", "hashed", User.Role.CLIENT);
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("alice@test.com");
         when(userRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(currentUser));
-        when(userRepository.findByEmail("new-alice@test.com")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UpdateProfileRequest request = new UpdateProfileRequest();
         request.setUsername("Alice Updated");
-        request.setEmail("new-alice@test.com");
 
         ResponseEntity<?> response = profileController.updateMe(request, authentication);
 
@@ -63,6 +62,6 @@ class ProfileControllerTest {
         UserResponse savedUser = (UserResponse) response.getBody();
         assertNotNull(savedUser);
         assertEquals("Alice Updated", savedUser.getUsername());
-        assertEquals("new-alice@test.com", savedUser.getEmail());
+        assertEquals("alice@test.com", savedUser.getEmail());
     }
 }

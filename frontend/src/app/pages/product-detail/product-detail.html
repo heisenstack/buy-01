@@ -16,8 +16,8 @@
 
           @if (isOwner(currentProduct)) {
             <div class="owner-menu-wrap">
-              <button type="button" class="more-button" aria-label="Open product actions" (click)="toggleMenu()">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a1.75 1.75 0 1 0 0-3.5A1.75 1.75 0 0 0 12 7Zm0 7.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Zm0 7.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Z"/></svg>
+              <button type="button" class="more-button" aria-label="Open product actions" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu()">
+                <mat-icon aria-hidden="true">more_vert</mat-icon>
               </button>
 
               @if (menuOpen()) {
@@ -34,23 +34,22 @@
 
         <div class="gallery-main">
           @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 0) {
-            <img [src]="'https://localhost:8443' + currentProduct.imageUrls[0]" [alt]="currentProduct.name">
+            <img [src]="'https://localhost:8443' + currentProduct.imageUrls[currentImageIndex]" [alt]="currentProduct.name">
+            @if (currentProduct.imageUrls.length > 1) {
+              <button type="button" class="gallery-arrow previous" aria-label="Show previous image" (click)="showPreviousImage(currentProduct.imageUrls.length)">
+                <mat-icon aria-hidden="true">chevron_left</mat-icon>
+              </button>
+              <button type="button" class="gallery-arrow next" aria-label="Show next image" (click)="showNextImage(currentProduct.imageUrls.length)">
+                <mat-icon aria-hidden="true">chevron_right</mat-icon>
+              </button>
+              <span class="image-counter">{{ currentImageIndex + 1 }} / {{ currentProduct.imageUrls.length }}</span>
+            }
           } @else {
             <div class="image-placeholder">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Zm3.5-7.5 2.2 2.7 3.1-4.1 5.7 7.4H5.5l2-3.9Z"/></svg>
+              <mat-icon aria-hidden="true">image</mat-icon>
             </div>
           }
         </div>
-
-        @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 1) {
-          <div class="thumbnail-row">
-            @for (imageUrl of currentProduct.imageUrls; track imageUrl) {
-              <div class="thumb">
-                <img [src]="'https://localhost:8443' + imageUrl" [alt]="currentProduct.name">
-              </div>
-            }
-          </div>
-        }
       </div>
 
       <div class="detail-content">
@@ -61,7 +60,7 @@
         <div class="status-row">
           <span class="pill">{{ currentProduct.quantity ?? 1 }} available</span>
           <span class="meta-user">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.33 0-6 1.79-6 4v1h12v-1c0-2.21-2.67-4-6-4Z"/></svg>
+            <mat-icon aria-hidden="true">person</mat-icon>
             {{ currentProduct.sellerName || 'Seller' }}
           </span>
           <span class="timestamp">{{ currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now' }}</span>
@@ -93,7 +92,9 @@
               <p class="eyebrow">Edit product</p>
               <h2>Update item details</h2>
             </div>
-            <button type="button" class="close-button" aria-label="Close update form" (click)="isEditing.set(false)">×</button>
+            <button type="button" class="close-button" aria-label="Close update form" (click)="isEditing.set(false)">
+              <mat-icon aria-hidden="true">close</mat-icon>
+            </button>
           </div>
 
           <label>Name</label>

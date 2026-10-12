@@ -66,21 +66,6 @@
                 }
               </div>
 
-              <div class="field-group" [class.has-error]="fieldErrors()['email']">
-                <label for="email">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  [(ngModel)]="emailInput"
-                  name="email"
-                  placeholder="you@example.com"
-                  [class.invalid]="fieldErrors()['email']"
-                  (input)="clearFieldError('email')">
-                @if (fieldErrors()['email']) {
-                  <small class="field-error">{{ fieldErrors()['email'] }}</small>
-                }
-              </div>
-
               <div class="field-group">
                 <label for="profile-avatar-input">Avatar</label>
                 <label class="file-picker" for="profile-avatar-input">

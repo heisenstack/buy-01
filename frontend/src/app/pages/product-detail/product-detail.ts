@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { Product, ProductService } from '../../services/product.service';
 import { extractErrorMessage } from '../../utils/error-message';
@@ -9,7 +10,7 @@ import { extractErrorMessage } from '../../utils/error-message';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css'
 })
@@ -19,6 +20,7 @@ export class ProductDetail implements OnInit {
   error = signal<string | null>(null);
   isEditing = signal(false);
   menuOpen = signal(false);
+  currentImageIndex = 0;
   editName = '';
   editDescription = '';
   editPrice = 0;
@@ -50,6 +52,7 @@ export class ProductDetail implements OnInit {
     this.productService.getById(id).subscribe({
       next: (data) => {
         this.product.set(data);
+        this.currentImageIndex = 0;
         this.loading.set(false);
       },
       error: (err) => {
@@ -65,6 +68,14 @@ export class ProductDetail implements OnInit {
 
   closeMenu(): void {
     this.menuOpen.set(false);
+  }
+
+  showPreviousImage(imageCount: number): void {
+    this.currentImageIndex = (this.currentImageIndex - 1 + imageCount) % imageCount;
+  }
+
+  showNextImage(imageCount: number): void {
+    this.currentImageIndex = (this.currentImageIndex + 1) % imageCount;
   }
 
   openEdit(): void {

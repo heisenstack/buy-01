@@ -6,7 +6,6 @@ import com.buy01.userservice.model.User;
 import com.buy01.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,22 +54,13 @@ public class ProfileController {
             return ResponseEntity.badRequest().body(Map.of("error", "Username must be at least 2 characters long."));
         }
 
-        if (requestedEmail != null && requestedEmail.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email cannot be empty."));
-        }
-
-        if (requestedEmail != null && !requestedEmail.equalsIgnoreCase(currentEmail)
-                && userRepository.findByEmail(requestedEmail).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Email already registered to another account."));
+        if (requestedEmail != null && !requestedEmail.equals(currentEmail)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Email address cannot be changed."));
         }
 
         if (requestedUsername != null) {
             user.setUsername(requestedUsername);
-        }
-
-        if (requestedEmail != null) {
-            user.setEmail(requestedEmail);
         }
 
         if (avatarMediaId != null && !avatarMediaId.isBlank()) {

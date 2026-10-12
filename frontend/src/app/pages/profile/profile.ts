@@ -22,7 +22,6 @@ export class Profile implements OnInit {
   selectedFile: File | null = null;
   selectedAvatarPreview: string | null = null;
   usernameInput = '';
-  emailInput = '';
   fieldErrors = signal<Record<string, string>>({});
 
   constructor(
@@ -51,7 +50,6 @@ export class Profile implements OnInit {
       next: (data) => {
         this.profile.set(data);
         this.usernameInput = data.username || '';
-        this.emailInput = data.email || '';
         this.selectedAvatarPreview = null;
         this.loading.set(false);
       },
@@ -87,18 +85,11 @@ export class Profile implements OnInit {
   private validateProfile(): Record<string, string> {
     const errors: Record<string, string> = {};
     const username = this.usernameInput.trim();
-    const email = this.emailInput.trim();
 
     if (!username) {
       errors['username'] = 'Username is required.';
     } else if (username.length < 2) {
       errors['username'] = 'Username must be at least 2 characters.';
-    }
-
-    if (!email) {
-      errors['email'] = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors['email'] = 'Enter a valid email address.';
     }
 
     return errors;
@@ -110,7 +101,7 @@ export class Profile implements OnInit {
 
     if (body && typeof body === 'object') {
       Object.entries(body).forEach(([key, value]) => {
-        if (['username', 'email'].includes(key) && typeof value === 'string' && value.trim()) {
+        if (key === 'username' && typeof value === 'string' && value.trim()) {
           mapped[key] = value;
         }
       });
@@ -126,7 +117,6 @@ export class Profile implements OnInit {
     if (!current) return;
 
     this.usernameInput = current.username || '';
-    this.emailInput = current.email || '';
     this.selectedAvatarPreview = null;
     this.fieldErrors.set({});
     this.isEditing.set(true);
@@ -156,12 +146,11 @@ export class Profile implements OnInit {
     this.submitting.set(true);
     this.message.set('Saving profile...');
 
-    const submitProfileUpdate = (payload: { username?: string; email?: string; avatarMediaId?: string }) => {
+    const submitProfileUpdate = (payload: { username?: string; avatarMediaId?: string }) => {
       this.authService.updateProfile(payload).subscribe({
         next: (updated) => {
           this.profile.set(updated);
           this.usernameInput = updated.username || '';
-          this.emailInput = updated.email || '';
           this.selectedAvatarPreview = null;
           this.selectedFile = null;
           this.isEditing.set(false);
@@ -194,13 +183,13 @@ export class Profile implements OnInit {
     };
 
     if (!this.selectedFile) {
-      submitProfileUpdate({ username: this.usernameInput.trim(), email: this.emailInput.trim() });
+      submitProfileUpdate({ username: this.usernameInput.trim() });
       return;
     }
 
     this.mediaService.upload(this.selectedFile).subscribe({
       next: (media) => {
-        submitProfileUpdate({ username: this.usernameInput.trim(), email: this.emailInput.trim(), avatarMediaId: media.id });
+        submitProfileUpdate({ username: this.usernameInput.trim(), avatarMediaId: media.id });
       },
       error: (err) => {
         this.message.set(extractErrorMessage(err, 'Avatar upload failed.'));

@@ -73,12 +73,25 @@
     </div>
 
     <div class="field-group">
-      <label>Photo</label>
+      <label>Photos</label>
       <label class="upload-box" for="product-image-upload">
-        <span class="upload-text">{{ selectedFile ? selectedFile.name : 'Choose image' }}</span>
-        <span class="upload-button">Upload</span>
+        <span class="upload-text">{{ selectedImages().length ? 'Add more images' : 'Choose images' }}</span>
+        <span class="upload-button">Browse</span>
       </label>
-      <input id="product-image-upload" type="file" accept="image/*" (change)="onFileSelected($event)">
+      <input id="product-image-upload" type="file" accept="image/*" multiple (change)="onFilesSelected($event)">
+      @if (selectedImages().length > 0) {
+        <div class="image-preview-grid">
+          @for (image of selectedImages(); track image.previewUrl; let index = $index) {
+            <div class="image-preview">
+              <img [src]="image.previewUrl" [alt]="image.file.name">
+              <button type="button" class="remove-image" [attr.aria-label]="'Remove ' + image.file.name" (click)="removeImage(index)">
+                <mat-icon aria-hidden="true">close</mat-icon>
+              </button>
+              <span>{{ image.file.name }}</span>
+            </div>
+          }
+        </div>
+      }
     </div>
 
     <div class="form-actions">

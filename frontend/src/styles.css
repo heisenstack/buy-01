@@ -1,3 +1,5 @@
+@import 'material-icons/iconfont/material-icons.css';
+
 :root {
   --bg: #f5f7fb;
   --bg-soft: #eef3ff;
@@ -312,11 +314,13 @@ nav .nav-links a:hover {
   color: var(--text);
 }
 
-nav .nav-links a svg,
-.icon-button svg {
+nav .nav-links a mat-icon,
+.icon-button mat-icon {
+  display: block;
   width: 0.9rem;
   height: 0.9rem;
-  fill: currentColor;
+  font-size: 0.9rem;
+  line-height: 0.9rem;
 }
 
 .container {

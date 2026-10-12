@@ -1,18 +1,25 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { ProductService } from '../../services/product.service';
 import { MediaService } from '../../services/media.service';
 import { extractErrorMessage } from '../../utils/error-message';
+import { forkJoin } from 'rxjs';
+
+interface SelectedImage {
+  file: File;
+  previewUrl: string;
+}
 
 @Component({
   selector: 'app-create-product',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, MatIconModule],
   templateUrl: './create-product.html',
   styleUrl: './create-product.css'
 })
-export class CreateProduct {
+export class CreateProduct implements OnDestroy {
   @Input() mode: 'inline' | 'modal' = 'inline';
   @Output() productCreated = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
@@ -21,7 +28,7 @@ export class CreateProduct {
   description = '';
   price = 0;
   quantity = 1;
-  selectedFile: File | null = null;
+  selectedImages = signal<SelectedImage[]>([]);
   message = signal<string | null>(null);
   isSubmitting = signal(false);
   fieldErrors = signal<Record<string, string>>({});
@@ -31,12 +38,33 @@ export class CreateProduct {
     private mediaService: MediaService
   ) {}
 
-  onFileSelected(event: Event): void {
+  ngOnDestroy(): void {
+    this.clearImagePreviews();
+  }
+
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files?.[0] ?? null;
-    if (this.selectedFile) {
+    const files = Array.from(input.files ?? []);
+    if (files.length > 0) {
+      this.selectedImages.update((images) => [
+        ...images,
+        ...files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))
+      ]);
       this.clearFieldError('image');
     }
+    input.value = '';
+  }
+
+  removeImage(index: number): void {
+    const images = this.selectedImages();
+    const removed = images[index];
+    if (removed) URL.revokeObjectURL(removed.previewUrl);
+    this.selectedImages.set(images.filter((_, imageIndex) => imageIndex !== index));
+  }
+
+  private clearImagePreviews(): void {
+    this.selectedImages().forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+    this.selectedImages.set([]);
   }
 
   submit(): void {
@@ -53,9 +81,9 @@ export class CreateProduct {
     this.isSubmitting.set(true);
     this.message.set('Creating product...');
 
-    if (this.selectedFile) {
-      this.mediaService.upload(this.selectedFile).subscribe({
-        next: (media) => this.createProduct([media.id]),
+    if (this.selectedImages().length > 0) {
+      forkJoin(this.selectedImages().map(({ file }) => this.mediaService.upload(file))).subscribe({
+        next: (mediaFiles) => this.createProduct(mediaFiles.map((media) => media.id)),
         error: (err) => {
           this.message.set(extractErrorMessage(err, 'Image upload failed.'));
           this.isSubmitting.set(false);
@@ -105,7 +133,7 @@ export class CreateProduct {
     this.description = '';
     this.price = 0;
     this.quantity = 1;
-    this.selectedFile = null;
+    this.clearImagePreviews();
     this.fieldErrors.set({});
     this.message.set(null);
   }

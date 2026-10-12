@@ -194,6 +194,17 @@
   box-sizing: border-box;
 }
 
+.field-group input[readonly] {
+  background: rgba(226,232,240,0.45);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
 .field-group.has-error input,
 .field-group input.invalid {
   border-color: #ef4444;

@@ -49,15 +49,10 @@ export class AuthService {
     return this.http.get<UserProfile>('https://localhost:8443/api/users/me');
   }
 
-  updateProfile(profile: { username?: string; email?: string; avatarMediaId?: string }): Observable<UserProfile> {
+  updateProfile(profile: { username?: string; avatarMediaId?: string }): Observable<UserProfile> {
     return this.http.put<UserProfile>('https://localhost:8443/api/users/me', profile).pipe(
       tap((updatedProfile) => {
         this.profile.set(updatedProfile);
-
-        const currentUser = this.currentUser();
-        if (currentUser && updatedProfile.email) {
-          this.currentUser.set({ ...currentUser, email: updatedProfile.email });
-        }
       })
     );
   }

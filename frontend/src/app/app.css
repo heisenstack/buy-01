@@ -15,8 +15,10 @@
   border-radius: 999px;
 }
 
-.icon-button svg {
+.icon-button mat-icon {
+  display: block;
   width: 0.9rem;
   height: 0.9rem;
-  fill: currentColor;
+  font-size: 0.9rem;
+  line-height: 0.9rem;
 }

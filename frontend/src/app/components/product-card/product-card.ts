@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { Product } from '../../services/product.service';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatIconModule],
   templateUrl: './product-card.html',
   styleUrl: './product-card.css'
 })
