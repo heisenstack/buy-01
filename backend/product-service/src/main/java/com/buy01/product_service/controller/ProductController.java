@@ -35,6 +35,20 @@ public class ProductController {
         );
     }
 
+    @GetMapping("/mine")
+    public Page<Product> mine(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(1, Math.min(size, 20));
+
+        return productRepository.findBySellerEmail(
+                auth.getName(),
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getOne(@PathVariable String id) {
         return productRepository.findById(id)
@@ -54,6 +68,20 @@ public class ProductController {
         Product saved = productRepository.save(product);
 
         return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/seller-name")
+    public ResponseEntity<?> updateSellerName(@RequestParam String name, Authentication auth) {
+        String sellerName = name.trim();
+        if (sellerName.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Seller name cannot be empty."));
+        }
+
+        List<Product> products = productRepository.findAllBySellerEmail(auth.getName());
+        products.forEach(product -> product.setSellerName(sellerName));
+        productRepository.saveAll(products);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")

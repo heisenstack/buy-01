@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { MediaService } from '../../services/media.service';
+import { ProductService } from '../../services/product.service';
 import { extractErrorMessage } from '../../utils/error-message';
 
 @Component({
@@ -26,7 +27,8 @@ export class Profile implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private productService: ProductService
   ) {}
 
   get currentAvatarUrl(): string | null {
@@ -163,9 +165,25 @@ export class Profile implements OnInit {
           this.selectedAvatarPreview = null;
           this.selectedFile = null;
           this.isEditing.set(false);
-          this.message.set('Profile updated successfully.');
           this.fieldErrors.set({});
-          this.submitting.set(false);
+
+          if (current.role === 'SELLER' && updated.username !== current.username) {
+            this.productService.updateSellerName(updated.username).subscribe({
+              next: () => {
+                this.message.set('Profile and product seller names updated successfully.');
+                this.submitting.set(false);
+              },
+              error: (err) => {
+                this.message.set(
+                  `Profile updated, but product seller names could not be updated: ${extractErrorMessage(err, 'Please try again.')}`
+                );
+                this.submitting.set(false);
+              }
+            });
+          } else {
+            this.message.set('Profile updated successfully.');
+            this.submitting.set(false);
+          }
         },
         error: (err) => {
           this.applyServerFieldErrors(err);

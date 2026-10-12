@@ -34,6 +34,7 @@ public class SecurityConfig {
                 }))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/ping", "/actuator/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/products/mine").hasRole("SELLER")
                 .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/products/**").hasRole("SELLER")
                 .requestMatchers(HttpMethod.PUT, "/products/**").hasRole("SELLER")

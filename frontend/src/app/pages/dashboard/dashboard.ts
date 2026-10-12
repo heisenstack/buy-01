@@ -16,6 +16,7 @@ import { extractErrorMessage } from '../../utils/error-message';
 })
 export class Dashboard implements OnInit {
   products = signal<Product[]>([]);
+  productCount = signal(0);
   error = signal<string | null>(null);
   loading = signal(false);
   loadingMore = signal(false);
@@ -50,6 +51,7 @@ export class Dashboard implements OnInit {
     if (!append) {
       this.loading.set(true);
       this.products.set([]);
+      this.productCount.set(0);
       this.currentPage.set(0);
       this.hasMore.set(true);
     } else {
@@ -58,12 +60,13 @@ export class Dashboard implements OnInit {
 
     this.error.set(null);
 
-    this.productService.getPage(this.currentPage(), this.pageSize).subscribe({
+    this.productService.getMyPage(this.currentPage(), this.pageSize).subscribe({
       next: (page) => {
         const nextProducts = this.sortNewestFirst(page.content);
         const mergedProducts = append ? [...this.products(), ...nextProducts] : nextProducts;
 
         this.products.set(this.sortNewestFirst(mergedProducts));
+        this.productCount.set(page.totalElements);
         this.hasMore.set(!page.last);
         this.currentPage.set(page.number + 1);
         this.loading.set(false);

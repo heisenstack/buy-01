@@ -35,6 +35,16 @@ export class ProductService {
     return this.http.get<PagedProducts>(`${this.baseUrl}?page=${page}&size=${size}`);
   }
 
+  getMyPage(page: number = 0, size: number = 20): Observable<PagedProducts> {
+    return this.http.get<PagedProducts>(`${this.baseUrl}/mine?page=${page}&size=${size}`);
+  }
+
+  updateSellerName(name: string): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/seller-name`, null, {
+      params: { name }
+    });
+  }
+
   getAll(): Observable<Product[]> {
     return this.getPage(0, 20).pipe(map((response) => response.content));
   }
