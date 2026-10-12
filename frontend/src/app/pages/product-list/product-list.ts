@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { extractErrorMessage } from '../../utils/error-message';
 import { ProductCard } from '../../components/product-card/product-card';
 import { CreateProduct } from '../../components/create-product/create-product';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-product-list',
@@ -27,7 +28,8 @@ export class ProductList implements OnInit {
   constructor(
     private productService: ProductService,
     public authService: AuthService,
-    private router: Router
+    private router: Router,
+    private notifications: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -75,7 +77,9 @@ export class ProductList implements OnInit {
         this.loadingMore.set(false);
       },
       error: (err) => {
-        this.error.set(extractErrorMessage(err, 'Unable to load products right now.'));
+        const message = extractErrorMessage(err, 'Unable to load products right now.');
+        this.error.set(message);
+        this.notifications.error(message);
         this.loading.set(false);
         this.loadingMore.set(false);
       }
@@ -104,8 +108,15 @@ export class ProductList implements OnInit {
     if (!confirm(`Delete "${product.name}"?`)) return;
 
     this.productService.delete(product.id).subscribe({
-      next: () => this.loadProducts(),
-      error: (err) => this.error.set(extractErrorMessage(err, 'Delete failed.'))
+      next: () => {
+        this.notifications.success('Product deleted successfully.');
+        this.loadProducts();
+      },
+      error: (err) => {
+        const message = extractErrorMessage(err, 'Delete failed.');
+        this.error.set(message);
+        this.notifications.error(message);
+      }
     });
   }
 

@@ -1,23 +1,35 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
+import { MediaResponse, MediaService } from '../../services/media.service';
+import { NotificationService } from '../../services/notification.service';
 import { Product, ProductService } from '../../services/product.service';
 import { extractErrorMessage } from '../../utils/error-message';
+import { forkJoin } from 'rxjs';
+
+interface SelectedProductImage {
+  file: File;
+  previewUrl: string;
+}
+
+interface ExistingProductImage {
+  id: string;
+  url: string;
+}
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, MatIconModule],
   templateUrl: './product-detail.html',
-  styleUrl: './product-detail.css'
+  styleUrl: './product-detail.css',
 })
-export class ProductDetail implements OnInit {
+export class ProductDetail implements OnDestroy, OnInit {
   product = signal<Product | null>(null);
   loading = signal(false);
-  error = signal<string | null>(null);
   isEditing = signal(false);
   menuOpen = signal(false);
   currentImageIndex = 0;
@@ -25,12 +37,18 @@ export class ProductDetail implements OnInit {
   editDescription = '';
   editPrice = 0;
   editQuantity = 1;
+  existingEditImages = signal<ExistingProductImage[]>([]);
+  selectedEditImages = signal<SelectedProductImage[]>([]);
+  imageSelectionChanged = signal(false);
+  isSaving = signal(false);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    public authService: AuthService
+    private mediaService: MediaService,
+    public authService: AuthService,
+    private notifications: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -47,7 +65,6 @@ export class ProductDetail implements OnInit {
 
   loadProduct(id: string): void {
     this.loading.set(true);
-    this.error.set(null);
 
     this.productService.getById(id).subscribe({
       next: (data) => {
@@ -56,9 +73,10 @@ export class ProductDetail implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(extractErrorMessage(err, 'Unable to load product details.'));
+        const message = extractErrorMessage(err, 'Unable to load product details.');
+        this.notifications.error(message);
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -78,34 +96,117 @@ export class ProductDetail implements OnInit {
     this.currentImageIndex = (this.currentImageIndex + 1) % imageCount;
   }
 
+  ngOnDestroy(): void {
+    this.clearEditImagePreviews();
+  }
+
+  onEditImagesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+
+    input.value = '';
+    if (files.length === 0) return;
+
+    this.selectedEditImages.update((images) => [
+      ...images,
+      ...files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+    ]);
+    this.imageSelectionChanged.set(true);
+  }
+
+  removeExistingEditImage(index: number): void {
+    this.existingEditImages.update((images) =>
+      images.filter((_, imageIndex) => imageIndex !== index),
+    );
+    this.imageSelectionChanged.set(true);
+  }
+
+  removeEditImage(index: number): void {
+    const images = this.selectedEditImages();
+    const removed = images[index];
+    if (removed) URL.revokeObjectURL(removed.previewUrl);
+    this.selectedEditImages.set(images.filter((_, imageIndex) => imageIndex !== index));
+    this.imageSelectionChanged.set(true);
+  }
+
+  cancelEdit(): void {
+    if (this.isSaving()) return;
+    this.clearEditImagePreviews();
+    this.isEditing.set(false);
+  }
+
   openEdit(): void {
     const current = this.product();
     if (!current) return;
 
     this.closeMenu();
+    this.clearEditImagePreviews();
     this.editName = current.name;
     this.editDescription = current.description;
     this.editPrice = current.price;
     this.editQuantity = current.quantity ?? 1;
+    this.existingEditImages.set(
+      (current.imageUrls ?? []).map((url) => ({
+        id: url.substring(url.lastIndexOf('/') + 1),
+        url,
+      })),
+    );
     this.isEditing.set(true);
   }
 
   saveEdit(): void {
     const current = this.product();
-    if (!current) return;
+    if (!current || this.isSaving()) return;
 
-    this.productService.update(current.id, {
+    this.isSaving.set(true);
+    const images = this.selectedEditImages();
+    if (images.length > 0) {
+      forkJoin(images.map(({ file }) => this.mediaService.upload(file))).subscribe({
+        next: (uploadedImages) => this.updateProduct(current.id, uploadedImages),
+        error: (err) => {
+          this.notifications.error(extractErrorMessage(err, 'Image upload failed.'));
+          this.isSaving.set(false);
+        },
+      });
+      return;
+    }
+
+    this.updateProduct(current.id);
+  }
+
+  private updateProduct(productId: string, uploadedImages?: MediaResponse[]): void {
+    const imageIds = [
+      ...this.existingEditImages().map(({ id }) => id),
+      ...(uploadedImages ?? []).map(({ id }) => id),
+    ];
+    const update = {
       name: this.editName,
       description: this.editDescription,
       price: this.editPrice,
-      quantity: this.editQuantity
-    }).subscribe({
+      quantity: this.editQuantity,
+      ...(this.imageSelectionChanged() ? { imageIds } : {}),
+    };
+
+    this.productService.update(productId, update).subscribe({
       next: () => {
+        this.clearEditImagePreviews();
         this.isEditing.set(false);
-        this.loadProduct(current.id);
+        this.isSaving.set(false);
+        this.notifications.success('Product updated successfully.');
+        this.loadProduct(productId);
       },
-      error: (err) => this.error.set(extractErrorMessage(err, 'Update failed.'))
+      error: (err) => {
+        this.notifications.error(extractErrorMessage(err, 'Update failed.'));
+        this.isSaving.set(false);
+      },
     });
+  }
+
+  private clearEditImagePreviews(): void {
+    this.selectedEditImages().forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+    this.selectedEditImages.set([]);
+    this.existingEditImages.set([]);
+    this.imageSelectionChanged.set(false);
   }
 
   deleteProduct(): void {
@@ -115,8 +216,14 @@ export class ProductDetail implements OnInit {
     if (!confirm(`Delete "${current.name}"?`)) return;
 
     this.productService.delete(current.id).subscribe({
-      next: () => this.router.navigate(['/']),
-      error: (err) => this.error.set(extractErrorMessage(err, 'Delete failed.'))
+      next: () => {
+        this.notifications.success('Product deleted successfully.');
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        const message = extractErrorMessage(err, 'Delete failed.');
+        this.notifications.error(message);
+      },
     });
   }
 }

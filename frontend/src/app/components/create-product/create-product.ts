@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { ProductService } from '../../services/product.service';
 import { MediaService } from '../../services/media.service';
+import { NotificationService } from '../../services/notification.service';
 import { extractErrorMessage } from '../../utils/error-message';
 import { forkJoin } from 'rxjs';
 
@@ -29,13 +30,13 @@ export class CreateProduct implements OnDestroy {
   price = 0;
   quantity = 1;
   selectedImages = signal<SelectedImage[]>([]);
-  message = signal<string | null>(null);
   isSubmitting = signal(false);
   fieldErrors = signal<Record<string, string>>({});
 
   constructor(
     private productService: ProductService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private notifications: NotificationService
   ) {}
 
   ngOnDestroy(): void {
@@ -73,19 +74,19 @@ export class CreateProduct implements OnDestroy {
     const validationErrors = this.validateForm();
     if (Object.keys(validationErrors).length > 0) {
       this.fieldErrors.set(validationErrors);
-      this.message.set('Please fix the highlighted fields.');
+      this.notifications.error(Object.values(validationErrors).join(' '));
       return;
     }
 
     this.fieldErrors.set({});
     this.isSubmitting.set(true);
-    this.message.set('Creating product...');
 
     if (this.selectedImages().length > 0) {
       forkJoin(this.selectedImages().map(({ file }) => this.mediaService.upload(file))).subscribe({
         next: (mediaFiles) => this.createProduct(mediaFiles.map((media) => media.id)),
         error: (err) => {
-          this.message.set(extractErrorMessage(err, 'Image upload failed.'));
+          const message = extractErrorMessage(err, 'Image upload failed.');
+          this.notifications.error(message);
           this.isSubmitting.set(false);
         }
       });
@@ -135,7 +136,6 @@ export class CreateProduct implements OnDestroy {
     this.quantity = 1;
     this.clearImagePreviews();
     this.fieldErrors.set({});
-    this.message.set(null);
   }
 
   private applyServerFieldErrors(err: any): void {
@@ -164,7 +164,7 @@ export class CreateProduct implements OnDestroy {
       imageIds
     }).subscribe({
       next: () => {
-        this.message.set('Product created!');
+        this.notifications.success('Product created successfully.');
         this.productCreated.emit();
         if (this.mode === 'modal') {
           this.closed.emit();
@@ -174,7 +174,8 @@ export class CreateProduct implements OnDestroy {
       },
       error: (err) => {
         this.applyServerFieldErrors(err);
-        this.message.set(extractErrorMessage(err, 'Product creation failed.'));
+        const message = extractErrorMessage(err, 'Product creation failed.');
+        this.notifications.error(message);
         this.isSubmitting.set(false);
       }
     });

@@ -1,18 +1,11 @@
 <div class="panel">
-  @if (authService.profile(); as p) {
-    <div class="user-welcome">
-      <p>Welcome back, <strong>{{ p.username }}</strong></p>
-      <span class="badge">{{ p.role }}</span>
-    </div>
-    <button class="secondary" (click)="logout()">Logout</button>
-  } @else {
-    <div class="auth-header">
-      <p class="eyebrow">Account access</p>
-      <h2>{{ mode() === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
-      <p>{{ mode() === 'login' ? 'Sign in to continue managing your listings and orders.' : 'Join the marketplace and start selling or shopping with confidence.' }}</p>
-    </div>
+  <div class="auth-header">
+    <p class="eyebrow">Account access</p>
+    <h2>{{ mode() === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
+    <p>{{ mode() === 'login' ? 'Sign in to continue managing your listings and orders.' : 'Join the marketplace and start selling or shopping with confidence.' }}</p>
+  </div>
 
-    <form class="auth-form" (ngSubmit)="submit()">
+  <form class="auth-form" (ngSubmit)="submit()">
       @if (mode() === 'register') {
         <div class="form-row" [class.has-error]="fieldErrors()['username']">
           <label>Username</label>
@@ -24,9 +17,6 @@
             [class.invalid]="fieldErrors()['username']"
             (input)="clearFieldError('username')"
             required>
-          @if (fieldErrors()['username']) {
-            <small class="field-error">{{ fieldErrors()['username'] }}</small>
-          }
         </div>
       }
 
@@ -40,9 +30,6 @@
           [class.invalid]="fieldErrors()['email']"
           (input)="clearFieldError('email')"
           required>
-        @if (fieldErrors()['email']) {
-          <small class="field-error">{{ fieldErrors()['email'] }}</small>
-        }
       </div>
 
       <div class="form-row" [class.has-error]="fieldErrors()['password']">
@@ -55,9 +42,6 @@
           [class.invalid]="fieldErrors()['password']"
           (input)="clearFieldError('password')"
           required>
-        @if (fieldErrors()['password']) {
-          <small class="field-error">{{ fieldErrors()['password'] }}</small>
-        }
       </div>
 
       @if (mode() === 'register') {
@@ -67,9 +51,6 @@
             <option value="CLIENT">Client</option>
             <option value="SELLER">Seller</option>
           </select>
-          @if (fieldErrors()['role']) {
-            <small class="field-error">{{ fieldErrors()['role'] }}</small>
-          }
         </div>
       }
 
@@ -82,12 +63,6 @@
           {{ mode() === 'login' ? "Need an account? Register" : 'Already have an account? Login' }}
         </button>
       </div>
-    </form>
+  </form>
 
-    @if (message()) {
-      <p class="message" [class.error]="message()?.toLowerCase().includes('failed') || message()?.toLowerCase().includes('error')">
-        {{ message() }}
-      </p>
-    }
-  }
 </div>

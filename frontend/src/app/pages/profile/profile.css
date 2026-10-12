@@ -211,12 +211,6 @@
   background: rgba(254, 242, 242, 0.8);
 }
 
-.field-error {
-  color: #b91c1c;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
 .avatar-preview-box {
   display: grid;
   gap: 0.5rem;

@@ -61,9 +61,6 @@
                   placeholder="Your username"
                   [class.invalid]="fieldErrors()['username']"
                   (input)="clearFieldError('username')">
-                @if (fieldErrors()['username']) {
-                  <small class="field-error">{{ fieldErrors()['username'] }}</small>
-                }
               </div>
 
               <div class="field-group">
@@ -108,10 +105,5 @@
       </div>
     }
 
-    @if (message()) {
-      <p class="message" [class.error]="isMessageError">
-        {{ message() }}
-      </p>
-    }
   </div>
 </section>

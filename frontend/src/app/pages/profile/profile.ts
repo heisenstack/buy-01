@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { MediaService } from '../../services/media.service';
 import { ProductService } from '../../services/product.service';
+import { NotificationService } from '../../services/notification.service';
 import { extractErrorMessage } from '../../utils/error-message';
 
 @Component({
@@ -15,7 +16,6 @@ import { extractErrorMessage } from '../../utils/error-message';
 })
 export class Profile implements OnInit {
   profile = signal<UserProfile | null>(null);
-  message = signal<string | null>(null);
   loading = signal(true);
   submitting = signal(false);
   isEditing = signal(false);
@@ -27,17 +27,13 @@ export class Profile implements OnInit {
   constructor(
     private authService: AuthService,
     private mediaService: MediaService,
-    private productService: ProductService
+    private productService: ProductService,
+    private notifications: NotificationService
   ) {}
 
   get currentAvatarUrl(): string | null {
     const avatarUrl = this.profile()?.avatarUrl;
     return avatarUrl ? 'https://localhost:8443' + avatarUrl : null;
-  }
-
-  get isMessageError(): boolean {
-    const value = (this.message() ?? '').toLowerCase();
-    return ['error', 'failed', 'invalid', 'required', 'already', 'upload', 'duplicate'].some(token => value.includes(token));
   }
 
   ngOnInit(): void {
@@ -54,7 +50,7 @@ export class Profile implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.message.set(extractErrorMessage(err, 'Failed to load profile.'));
+        this.notifications.error(extractErrorMessage(err, 'Failed to load profile.'));
         this.loading.set(false);
       }
     });
@@ -120,7 +116,6 @@ export class Profile implements OnInit {
     this.selectedAvatarPreview = null;
     this.fieldErrors.set({});
     this.isEditing.set(true);
-    this.message.set(null);
   }
 
   cancelEditing(): void {
@@ -128,7 +123,6 @@ export class Profile implements OnInit {
     this.selectedFile = null;
     this.selectedAvatarPreview = null;
     this.fieldErrors.set({});
-    this.message.set(null);
   }
 
   saveProfile(): void {
@@ -138,13 +132,12 @@ export class Profile implements OnInit {
     const validationErrors = this.validateProfile();
     if (Object.keys(validationErrors).length > 0) {
       this.fieldErrors.set(validationErrors);
-      this.message.set('Please fix the highlighted fields.');
+      this.notifications.error(Object.values(validationErrors).join(' '));
       return;
     }
 
     this.fieldErrors.set({});
     this.submitting.set(true);
-    this.message.set('Saving profile...');
 
     const submitProfileUpdate = (payload: { username?: string; avatarMediaId?: string }) => {
       this.authService.updateProfile(payload).subscribe({
@@ -159,24 +152,24 @@ export class Profile implements OnInit {
           if (current.role === 'SELLER' && updated.username !== current.username) {
             this.productService.updateSellerName(updated.username).subscribe({
               next: () => {
-                this.message.set('Profile and product seller names updated successfully.');
+                this.notifications.success('Profile updated successfully.');
                 this.submitting.set(false);
               },
               error: (err) => {
-                this.message.set(
-                  `Profile updated, but product seller names could not be updated: ${extractErrorMessage(err, 'Please try again.')}`
-                );
+                const message = `Profile updated, but product seller names could not be updated: ${extractErrorMessage(err, 'Please try again.')}`;
+                this.notifications.error(message);
                 this.submitting.set(false);
               }
             });
           } else {
-            this.message.set('Profile updated successfully.');
+            this.notifications.success('Profile updated successfully.');
             this.submitting.set(false);
           }
         },
         error: (err) => {
           this.applyServerFieldErrors(err);
-          this.message.set(extractErrorMessage(err, 'Failed to update profile.'));
+          const message = extractErrorMessage(err, 'Failed to update profile.');
+          this.notifications.error(message);
           this.submitting.set(false);
         }
       });
@@ -192,7 +185,8 @@ export class Profile implements OnInit {
         submitProfileUpdate({ username: this.usernameInput.trim(), avatarMediaId: media.id });
       },
       error: (err) => {
-        this.message.set(extractErrorMessage(err, 'Avatar upload failed.'));
+        const message = extractErrorMessage(err, 'Avatar upload failed.');
+        this.notifications.error(message);
         this.submitting.set(false);
       }
     });

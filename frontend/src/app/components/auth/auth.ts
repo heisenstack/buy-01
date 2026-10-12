@@ -1,7 +1,9 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 import { extractErrorMessage } from '../../utils/error-message';
 
 @Component({
@@ -17,15 +19,17 @@ export class Auth {
   email = '';
   password = '';
   role = 'CLIENT';
-  message = signal<string | null>(null);
   isSubmitting = signal(false);
   fieldErrors = signal<Record<string, string>>({});
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    private router: Router,
+    private notifications: NotificationService
+  ) {}
 
   toggleMode(): void {
     this.mode.set(this.mode() === 'login' ? 'register' : 'login');
-    this.message.set(null);
     this.fieldErrors.set({});
   }
 
@@ -100,36 +104,38 @@ export class Auth {
     const errors = this.mode() === 'login' ? this.validateLogin() : this.validateRegister();
     if (Object.keys(errors).length > 0) {
       this.fieldErrors.set(errors);
-      this.message.set('Please fix the highlighted fields.');
+      this.notifications.error(Object.values(errors).join(' '));
       return;
     }
 
     this.fieldErrors.set({});
     this.isSubmitting.set(true);
-    this.message.set(null);
 
     if (this.mode() === 'login') {
       this.authService.login(this.email.trim(), this.password).subscribe({
         next: () => {
-          this.message.set('Logged in!');
+          this.notifications.success('You are now signed in.');
           this.isSubmitting.set(false);
+          this.router.navigate(['/']);
         },
         error: (err) => {
           this.applyServerFieldErrors(err);
-          this.message.set(extractErrorMessage(err, 'Login failed. Please check your credentials.'));
+          const message = extractErrorMessage(err, 'Login failed. Please check your credentials.');
+          this.notifications.error(message);
           this.isSubmitting.set(false);
         }
       });
     } else {
       this.authService.register(this.username.trim(), this.email.trim(), this.password, this.role).subscribe({
         next: () => {
-          this.message.set('Registered! You can now log in.');
+          this.notifications.success('Account created. You can now sign in.');
           this.mode.set('login');
           this.isSubmitting.set(false);
         },
         error: (err) => {
           this.applyServerFieldErrors(err);
-          this.message.set(extractErrorMessage(err, 'Registration failed. Please try again.'));
+          const message = extractErrorMessage(err, 'Registration failed. Please try again.');
+          this.notifications.error(message);
           this.isSubmitting.set(false);
         }
       });

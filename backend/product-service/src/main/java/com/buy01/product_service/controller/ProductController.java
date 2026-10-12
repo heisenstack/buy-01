@@ -103,7 +103,7 @@ public class ProductController {
         product.setPrice(request.getPrice());
         product.setQuantity(request.getQuantity());
 
-        if (request.getImageIds() != null && !request.getImageIds().isEmpty()) {
+        if (request.getImageIds() != null) {
             product.setImageUrls(buildImageUrls(request.getImageIds()));
         }
 

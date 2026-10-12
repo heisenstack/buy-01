@@ -5,6 +5,7 @@ import { ProductService, Product } from '../../services/product.service';
 import { AuthService } from '../../services/auth.service';
 import { CreateProduct } from '../../components/create-product/create-product';
 import { ProductCard } from '../../components/product-card/product-card';
+import { NotificationService } from '../../services/notification.service';
 import { extractErrorMessage } from '../../utils/error-message';
 
 @Component({
@@ -27,7 +28,8 @@ export class Dashboard implements OnInit {
   constructor(
     private productService: ProductService,
     public authService: AuthService,
-    private router: Router
+    private router: Router,
+    private notifications: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -73,7 +75,9 @@ export class Dashboard implements OnInit {
         this.loadingMore.set(false);
       },
       error: (err) => {
-        this.error.set(extractErrorMessage(err, 'Unable to load your products.'));
+        const message = extractErrorMessage(err, 'Unable to load your products.');
+        this.error.set(message);
+        this.notifications.error(message);
         this.loading.set(false);
         this.loadingMore.set(false);
       }
@@ -102,8 +106,15 @@ export class Dashboard implements OnInit {
     if (!confirm(`Delete "${product.name}"?`)) return;
 
     this.productService.delete(product.id).subscribe({
-      next: () => this.loadProducts(),
-      error: (err) => this.error.set(extractErrorMessage(err, 'Delete failed.'))
+      next: () => {
+        this.notifications.success('Product deleted successfully.');
+        this.loadProducts();
+      },
+      error: (err) => {
+        const message = extractErrorMessage(err, 'Delete failed.');
+        this.error.set(message);
+        this.notifications.error(message);
+      }
     });
   }
 }

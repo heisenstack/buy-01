@@ -3,8 +3,6 @@
 
   @if (loading()) {
     <div class="detail-loading">Loading product...</div>
-  } @else if (error()) {
-    <p class="message error">{{ error() }}</p>
   } @else if (product(); as currentProduct) {
     <section class="product-detail-layout">
       <div class="media-panel">
@@ -16,14 +14,26 @@
 
           @if (isOwner(currentProduct)) {
             <div class="owner-menu-wrap">
-              <button type="button" class="more-button" aria-label="Open product actions" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu()">
+              <button
+                type="button"
+                class="more-button"
+                aria-label="Open product actions"
+                [attr.aria-expanded]="menuOpen()"
+                (click)="toggleMenu()"
+              >
                 <mat-icon aria-hidden="true">more_vert</mat-icon>
               </button>
 
               @if (menuOpen()) {
                 <div class="owner-menu-panel">
-                  <button type="button" class="menu-item" (click)="openEdit()">Update product</button>
-                  <button type="button" class="menu-item danger" (click)="deleteProduct()">Delete product</button>
+                  <button type="button" class="menu-item update-item" (click)="openEdit()">
+                    <mat-icon aria-hidden="true">edit</mat-icon>
+                    Update product
+                  </button>
+                  <button type="button" class="menu-item danger" (click)="deleteProduct()">
+                    <mat-icon aria-hidden="true">delete_outline</mat-icon>
+                    Delete product
+                  </button>
                 </div>
               }
             </div>
@@ -34,15 +44,30 @@
 
         <div class="gallery-main">
           @if (currentProduct.imageUrls && currentProduct.imageUrls.length > 0) {
-            <img [src]="'https://localhost:8443' + currentProduct.imageUrls[currentImageIndex]" [alt]="currentProduct.name">
+            <img
+              [src]="'https://localhost:8443' + currentProduct.imageUrls[currentImageIndex]"
+              [alt]="currentProduct.name"
+            />
             @if (currentProduct.imageUrls.length > 1) {
-              <button type="button" class="gallery-arrow previous" aria-label="Show previous image" (click)="showPreviousImage(currentProduct.imageUrls.length)">
+              <button
+                type="button"
+                class="gallery-arrow previous"
+                aria-label="Show previous image"
+                (click)="showPreviousImage(currentProduct.imageUrls.length)"
+              >
                 <mat-icon aria-hidden="true">chevron_left</mat-icon>
               </button>
-              <button type="button" class="gallery-arrow next" aria-label="Show next image" (click)="showNextImage(currentProduct.imageUrls.length)">
+              <button
+                type="button"
+                class="gallery-arrow next"
+                aria-label="Show next image"
+                (click)="showNextImage(currentProduct.imageUrls.length)"
+              >
                 <mat-icon aria-hidden="true">chevron_right</mat-icon>
               </button>
-              <span class="image-counter">{{ currentImageIndex + 1 }} / {{ currentProduct.imageUrls.length }}</span>
+              <span class="image-counter"
+                >{{ currentImageIndex + 1 }} / {{ currentProduct.imageUrls.length }}</span
+              >
             }
           } @else {
             <div class="image-placeholder">
@@ -63,11 +88,16 @@
             <mat-icon aria-hidden="true">person</mat-icon>
             {{ currentProduct.sellerName || 'Seller' }}
           </span>
-          <span class="timestamp">{{ currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now' }}</span>
+          <span class="timestamp">{{
+            currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now'
+          }}</span>
         </div>
 
         <div class="description-block">
-          <h2>Description</h2>
+          <div class="description-heading">
+            <span class="description-mark" aria-hidden="true"></span>
+            <h2>Description</h2>
+          </div>
           <p>{{ currentProduct.description || 'No description provided yet.' }}</p>
         </div>
 
@@ -78,7 +108,11 @@
           </div>
           <div class="meta-item">
             <span class="meta-label">Posted</span>
-            <span>{{ currentProduct.createdAt ? (currentProduct.createdAt | date: 'mediumDate') : 'Just now' }}</span>
+            <span>{{
+              currentProduct.createdAt
+                ? (currentProduct.createdAt | date: 'mediumDate')
+                : 'Just now'
+            }}</span>
           </div>
         </div>
       </div>
@@ -92,27 +126,119 @@
               <p class="eyebrow">Edit product</p>
               <h2>Update item details</h2>
             </div>
-            <button type="button" class="close-button" aria-label="Close update form" (click)="isEditing.set(false)">
+            <button
+              type="button"
+              class="close-button"
+              aria-label="Close update form"
+              [disabled]="isSaving()"
+              (click)="cancelEdit()"
+            >
               <mat-icon aria-hidden="true">close</mat-icon>
             </button>
           </div>
 
-          <label>Name</label>
-          <input type="text" [(ngModel)]="editName" name="editName">
+          <p class="editor-intro">Make changes to your listing details below.</p>
+          <form class="editor-form" (ngSubmit)="saveEdit()">
+            <div class="editor-field">
+              <label for="edit-name">Product name</label>
+              <input id="edit-name" type="text" [(ngModel)]="editName" name="editName" />
+            </div>
 
-          <label>Description</label>
-          <textarea [(ngModel)]="editDescription" name="editDescription"></textarea>
+            <div class="editor-field">
+              <label for="edit-description">Description</label>
+              <textarea
+                id="edit-description"
+                [(ngModel)]="editDescription"
+                name="editDescription"
+              ></textarea>
+            </div>
 
-          <label>Price</label>
-          <input type="number" [(ngModel)]="editPrice" name="editPrice" step="0.01">
+            <div class="editor-field image-editor-field">
+              <label>Product photos</label>
+              <p class="image-editor-hint">Remove photos with × or add more with +.</p>
+              <div class="current-image-grid">
+                @for (image of existingEditImages(); track image.id; let index = $index) {
+                  <div class="edit-image-preview">
+                    <img [src]="'https://localhost:8443' + image.url" [alt]="currentProduct.name" />
+                    <button
+                      type="button"
+                      class="remove-edit-image"
+                      [attr.aria-label]="'Remove product photo ' + (index + 1)"
+                      [disabled]="isSaving()"
+                      (click)="removeExistingEditImage(index)"
+                    >
+                      <mat-icon aria-hidden="true">close</mat-icon>
+                    </button>
+                  </div>
+                }
+                @for (image of selectedEditImages(); track image.previewUrl; let index = $index) {
+                  <div class="edit-image-preview">
+                    <img [src]="image.previewUrl" [alt]="image.file.name" />
+                    <button
+                      type="button"
+                      class="remove-edit-image"
+                      [attr.aria-label]="'Remove ' + image.file.name"
+                      [disabled]="isSaving()"
+                      (click)="removeEditImage(index)"
+                    >
+                      <mat-icon aria-hidden="true">close</mat-icon>
+                    </button>
+                  </div>
+                }
+                <label class="image-picker" aria-label="Add product photos">
+                  <input
+                    id="edit-product-images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    [disabled]="isSaving()"
+                    (change)="onEditImagesSelected($event)"
+                  />
+                  <mat-icon aria-hidden="true">add</mat-icon>
+                </label>
+              </div>
+            </div>
 
-          <label>Quantity</label>
-          <input type="number" [(ngModel)]="editQuantity" name="editQuantity" min="1" step="1">
+            <div class="editor-fields-row">
+              <div class="editor-field">
+                <label for="edit-price">Price (€)</label>
+                <input
+                  id="edit-price"
+                  type="number"
+                  [(ngModel)]="editPrice"
+                  name="editPrice"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
 
-          <div class="actions">
-            <button type="button" (click)="saveEdit()">Save changes</button>
-            <button type="button" class="secondary" (click)="isEditing.set(false)">Cancel</button>
-          </div>
+              <div class="editor-field">
+                <label for="edit-quantity">Quantity</label>
+                <input
+                  id="edit-quantity"
+                  type="number"
+                  [(ngModel)]="editQuantity"
+                  name="editQuantity"
+                  min="1"
+                  step="1"
+                />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" [disabled]="isSaving()">
+                {{ isSaving() ? 'Saving...' : 'Save changes' }}
+              </button>
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="isSaving()"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     }
