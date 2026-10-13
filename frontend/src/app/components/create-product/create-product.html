@@ -17,59 +17,52 @@
     }
   </div>
 
-  <form class="create-product-form" (ngSubmit)="submit()">
-    <div class="field-group" [class.has-error]="fieldErrors()['name']">
+  <form class="create-product-form" [formGroup]="productForm" (ngSubmit)="submit()">
+    <div class="field-group" [class.has-error]="fieldErrors()['name'] || (productForm.controls.name.invalid && productForm.controls.name.touched)">
       <label>Name</label>
       <input
         type="text"
-        [(ngModel)]="name"
-        name="name"
+        formControlName="name"
         placeholder="e.g. Handmade Ceramic Mug"
-        minlength="2"
-        maxlength="50"
-        [class.invalid]="fieldErrors()['name']"
+        [class.invalid]="fieldErrors()['name'] || (productForm.controls.name.invalid && productForm.controls.name.touched)"
         (input)="clearFieldError('name')"
         required
       />
     </div>
 
-    <div class="field-group" [class.has-error]="fieldErrors()['description']">
+    <div class="field-group" [class.has-error]="fieldErrors()['description'] || (productForm.controls.description.invalid && productForm.controls.description.touched)">
       <label>Description</label>
       <textarea
-        [(ngModel)]="description"
-        name="description"
+        formControlName="description"
         placeholder="Describe the piece..."
-        maxlength="500"
-        [class.invalid]="fieldErrors()['description']"
+        [class.invalid]="fieldErrors()['description'] || (productForm.controls.description.invalid && productForm.controls.description.touched)"
         (input)="clearFieldError('description')"
         required
       ></textarea>
     </div>
 
     <div class="two-column-fields">
-      <div class="field-group" [class.has-error]="fieldErrors()['price']">
+      <div class="field-group" [class.has-error]="fieldErrors()['price'] || (productForm.controls.price.invalid && productForm.controls.price.touched)">
         <label>Price (€)</label>
         <input
           type="number"
-          [(ngModel)]="price"
-          name="price"
+          formControlName="price"
           placeholder="0.00"
-          [class.invalid]="fieldErrors()['price']"
+          [class.invalid]="fieldErrors()['price'] || (productForm.controls.price.invalid && productForm.controls.price.touched)"
           (input)="clearFieldError('price')"
           required
-          min="0"
+          min="0.01"
           step="0.01"
         />
       </div>
 
-      <div class="field-group" [class.has-error]="fieldErrors()['quantity']">
+      <div class="field-group" [class.has-error]="fieldErrors()['quantity'] || (productForm.controls.quantity.invalid && productForm.controls.quantity.touched)">
         <label>Quantity</label>
         <input
           type="number"
-          [(ngModel)]="quantity"
-          name="quantity"
+          formControlName="quantity"
           placeholder="1"
-          [class.invalid]="fieldErrors()['quantity']"
+          [class.invalid]="fieldErrors()['quantity'] || (productForm.controls.quantity.invalid && productForm.controls.quantity.touched)"
           (input)="clearFieldError('quantity')"
           required
           min="1"
@@ -79,7 +72,7 @@
     </div>
 
     <div class="field-group">
-      <label>Photos</label>
+      <label>Photos (max 2 MB each, image/*)</label>
       <label class="upload-box" for="product-image-upload">
         <span class="upload-text">{{
           selectedImages().length ? 'Add more images' : 'Choose images'

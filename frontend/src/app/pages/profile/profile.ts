@@ -1,16 +1,18 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { MediaService } from '../../services/media.service';
 import { ProductService } from '../../services/product.service';
 import { NotificationService } from '../../services/notification.service';
 import { extractErrorMessage } from '../../utils/error-message';
 
+const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -21,11 +23,19 @@ export class Profile implements OnInit {
   isEditing = signal(false);
   selectedFile: File | null = null;
   selectedAvatarPreview: string | null = null;
-  usernameInput = '';
   fieldErrors = signal<Record<string, string>>({});
 
+  profileForm = new FormGroup({
+    username: new FormControl('', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(15),
+      Validators.pattern('^[A-Za-z0-9]+$'),
+    ]),
+  });
+
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private mediaService: MediaService,
     private productService: ProductService,
     private notifications: NotificationService,
@@ -45,7 +55,7 @@ export class Profile implements OnInit {
     this.authService.getMe().subscribe({
       next: (data) => {
         this.profile.set(data);
-        this.usernameInput = data.username || '';
+        this.profileForm.patchValue({ username: data.username || '' });
         this.selectedAvatarPreview = null;
         this.loading.set(false);
       },
@@ -59,13 +69,30 @@ export class Profile implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
-    this.selectedFile = file;
 
     if (!file) {
+      this.selectedFile = null;
       this.selectedAvatarPreview = null;
       return;
     }
 
+    if (!file.type.startsWith('image/')) {
+      this.notifications.error('Avatar must be an image file (image/*).');
+      input.value = '';
+      this.selectedFile = null;
+      this.selectedAvatarPreview = null;
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      this.notifications.error(`Avatar exceeds 2 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`);
+      input.value = '';
+      this.selectedFile = null;
+      this.selectedAvatarPreview = null;
+      return;
+    }
+
+    this.selectedFile = file;
     this.selectedAvatarPreview = URL.createObjectURL(file);
   }
 
@@ -76,23 +103,6 @@ export class Profile implements OnInit {
     const next = { ...current };
     delete next[field];
     this.fieldErrors.set(next);
-  }
-
-  private validateProfile(): Record<string, string> {
-    const errors: Record<string, string> = {};
-    const username = this.usernameInput.trim();
-
-    if (!username) {
-      errors['username'] = 'Username is required.';
-    } else if (username.length < 2) {
-      errors['username'] = 'Username must be at least 2 characters.';
-    } else if (username.length > 50) {
-      errors['username'] = 'Username cannot exceed 50 characters.';
-    } else if (!/^[A-Za-z0-9]+$/.test(username)) {
-      errors['username'] = 'Username can contain only letters and numbers.';
-    }
-
-    return errors;
   }
 
   private applyServerFieldErrors(err: any): void {
@@ -116,8 +126,9 @@ export class Profile implements OnInit {
     const current = this.profile();
     if (!current) return;
 
-    this.usernameInput = current.username || '';
+    this.profileForm.patchValue({ username: current.username || '' });
     this.selectedAvatarPreview = null;
+    this.selectedFile = null;
     this.fieldErrors.set({});
     this.isEditing.set(true);
   }
@@ -133,13 +144,21 @@ export class Profile implements OnInit {
     const current = this.profile();
     if (!current) return;
 
-    const validationErrors = this.validateProfile();
-    if (Object.keys(validationErrors).length > 0) {
-      this.fieldErrors.set(validationErrors);
-      this.notifications.error(Object.values(validationErrors).join(' '));
+    if (this.profileForm.invalid) {
+      this.profileForm.markAllAsTouched();
+      const errors: Record<string, string> = {};
+      const u = this.profileForm.controls.username;
+      if (u.errors?.['required']) errors['username'] = 'Username is required.';
+      else if (u.errors?.['minlength']) errors['username'] = 'Username must be at least 2 characters.';
+      else if (u.errors?.['maxlength']) errors['username'] = 'Username cannot exceed 15 characters.';
+      else if (u.errors?.['pattern']) errors['username'] = 'Username can contain only letters and numbers.';
+
+      this.fieldErrors.set(errors);
+      this.notifications.error(Object.values(errors).join(' '));
       return;
     }
 
+    const updatedUsername = this.profileForm.value.username!.trim();
     this.fieldErrors.set({});
     this.submitting.set(true);
 
@@ -147,7 +166,7 @@ export class Profile implements OnInit {
       this.authService.updateProfile(payload).subscribe({
         next: (updated) => {
           this.profile.set(updated);
-          this.usernameInput = updated.username || '';
+          this.profileForm.patchValue({ username: updated.username || '' });
           this.selectedAvatarPreview = null;
           this.selectedFile = null;
           this.isEditing.set(false);
@@ -180,13 +199,13 @@ export class Profile implements OnInit {
     };
 
     if (!this.selectedFile) {
-      submitProfileUpdate({ username: this.usernameInput.trim() });
+      submitProfileUpdate({ username: updatedUsername });
       return;
     }
 
     this.mediaService.upload(this.selectedFile).subscribe({
       next: (media) => {
-        submitProfileUpdate({ username: this.usernameInput.trim(), avatarMediaId: media.id });
+        submitProfileUpdate({ username: updatedUsername, avatarMediaId: media.id });
       },
       error: (err) => {
         const message = extractErrorMessage(err, 'Avatar upload failed.');

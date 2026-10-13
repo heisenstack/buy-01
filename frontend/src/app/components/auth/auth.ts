@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -9,18 +9,45 @@ import { extractErrorMessage } from '../../utils/error-message';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './auth.html',
   styleUrl: './auth.css',
 })
 export class Auth {
   mode = signal<'login' | 'register'>('login');
-  username = '';
-  email = '';
-  password = '';
-  role = 'CLIENT';
   isSubmitting = signal(false);
   fieldErrors = signal<Record<string, string>>({});
+
+  loginForm = new FormGroup({
+    email: new FormControl('', [
+      Validators.required,
+      Validators.email,
+    ]),
+    password: new FormControl('', [
+      Validators.required,
+    ]),
+  });
+
+  registerForm = new FormGroup({
+    username: new FormControl('', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(15),
+      Validators.pattern('^[A-Za-z0-9]+$'),
+    ]),
+    email: new FormControl('', [
+      Validators.required,
+      Validators.email,
+      Validators.maxLength(50),
+    ]),
+    password: new FormControl('', [
+      Validators.required,
+      Validators.minLength(6),
+    ]),
+    role: new FormControl('CLIENT', [
+      Validators.required,
+    ]),
+  });
 
   constructor(
     public authService: AuthService,
@@ -39,54 +66,6 @@ export class Auth {
     const next = { ...current };
     delete next[field];
     this.fieldErrors.set(next);
-  }
-
-  private validateLogin(): Record<string, string> {
-    const errors: Record<string, string> = {};
-
-    if (!this.email.trim()) {
-      errors['email'] = 'Email is required.';
-    } else if (this.email.trim().length > 20) {
-      errors['email'] = 'Email cannot exceed 20 characters.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
-      errors['email'] = 'Enter a valid email address.';
-    }
-
-    if (!this.password.trim()) {
-      errors['password'] = 'Password is required.';
-    }
-
-    return errors;
-  }
-
-  private validateRegister(): Record<string, string> {
-    const errors: Record<string, string> = {};
-
-    if (!this.username.trim()) {
-      errors['username'] = 'Username is required.';
-    } else if (this.username.trim().length < 2) {
-      errors['username'] = 'Username must be at least 2 characters.';
-    } else if (this.username.trim().length > 15) {
-      errors['username'] = 'Username cannot exceed 15 characters.';
-    } else if (!/^[A-Za-z0-9]+$/.test(this.username.trim())) {
-      errors['username'] = 'Username can contain only letters and numbers.';
-    }
-
-    if (!this.email.trim()) {
-      errors['email'] = 'Email is required.';
-    } else if (this.email.trim().length > 20) {
-      errors['email'] = 'Email cannot exceed 20 characters.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
-      errors['email'] = 'Enter a valid email address.';
-    }
-
-    if (!this.password.trim()) {
-      errors['password'] = 'Password is required.';
-    } else if (this.password.length < 6) {
-      errors['password'] = 'Password must be at least 6 characters.';
-    }
-
-    return errors;
   }
 
   private applyServerFieldErrors(err: any): void {
@@ -113,18 +92,24 @@ export class Auth {
   submit(): void {
     if (this.isSubmitting()) return;
 
-    const errors = this.mode() === 'login' ? this.validateLogin() : this.validateRegister();
-    if (Object.keys(errors).length > 0) {
-      this.fieldErrors.set(errors);
-      this.notifications.error(Object.values(errors).join(' '));
-      return;
-    }
-
-    this.fieldErrors.set({});
-    this.isSubmitting.set(true);
-
     if (this.mode() === 'login') {
-      this.authService.login(this.email.trim(), this.password).subscribe({
+      if (this.loginForm.invalid) {
+        this.loginForm.markAllAsTouched();
+        const errors: Record<string, string> = {};
+        if (this.loginForm.controls.email.errors?.['required']) errors['email'] = 'Email is required.';
+        else if (this.loginForm.controls.email.errors?.['email']) errors['email'] = 'Enter a valid email address.';
+        if (this.loginForm.controls.password.errors?.['required']) errors['password'] = 'Password is required.';
+        this.fieldErrors.set(errors);
+        this.notifications.error(Object.values(errors).join(' '));
+        return;
+      }
+
+      this.fieldErrors.set({});
+      this.isSubmitting.set(true);
+      const email = this.loginForm.value.email!.trim();
+      const password = this.loginForm.value.password!;
+
+      this.authService.login(email, password).subscribe({
         next: () => {
           this.notifications.success('You are now signed in.');
           this.isSubmitting.set(false);
@@ -138,21 +123,49 @@ export class Auth {
         },
       });
     } else {
-      this.authService
-        .register(this.username.trim(), this.email.trim(), this.password, this.role)
-        .subscribe({
-          next: () => {
-            this.notifications.success('Account created. You can now sign in.');
-            this.mode.set('login');
-            this.isSubmitting.set(false);
-          },
-          error: (err) => {
-            this.applyServerFieldErrors(err);
-            const message = extractErrorMessage(err, 'Registration failed. Please try again.');
-            this.notifications.error(message);
-            this.isSubmitting.set(false);
-          },
-        });
+      if (this.registerForm.invalid) {
+        this.registerForm.markAllAsTouched();
+        const errors: Record<string, string> = {};
+        const u = this.registerForm.controls.username;
+        if (u.errors?.['required']) errors['username'] = 'Username is required.';
+        else if (u.errors?.['minlength']) errors['username'] = 'Username must be at least 2 characters.';
+        else if (u.errors?.['maxlength']) errors['username'] = 'Username cannot exceed 15 characters.';
+        else if (u.errors?.['pattern']) errors['username'] = 'Username can contain only letters and numbers.';
+
+        const e = this.registerForm.controls.email;
+        if (e.errors?.['required']) errors['email'] = 'Email is required.';
+        else if (e.errors?.['email']) errors['email'] = 'Enter a valid email address.';
+
+        const p = this.registerForm.controls.password;
+        if (p.errors?.['required']) errors['password'] = 'Password is required.';
+        else if (p.errors?.['minlength']) errors['password'] = 'Password must be at least 6 characters.';
+
+        this.fieldErrors.set(errors);
+        this.notifications.error(Object.values(errors).join(' '));
+        return;
+      }
+
+      this.fieldErrors.set({});
+      this.isSubmitting.set(true);
+      const username = this.registerForm.value.username!.trim();
+      const email = this.registerForm.value.email!.trim();
+      const password = this.registerForm.value.password!;
+      const role = this.registerForm.value.role!;
+
+      this.authService.register(username, email, password, role).subscribe({
+        next: () => {
+          this.notifications.success('Account created. You can now sign in.');
+          this.mode.set('login');
+          this.registerForm.reset({ role: 'CLIENT' });
+          this.isSubmitting.set(false);
+        },
+        error: (err) => {
+          this.applyServerFieldErrors(err);
+          const message = extractErrorMessage(err, 'Registration failed. Please try again.');
+          this.notifications.error(message);
+          this.isSubmitting.set(false);
+        },
+      });
     }
   }
 

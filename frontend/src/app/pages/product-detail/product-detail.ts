@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { MediaResponse, MediaService } from '../../services/media.service';
@@ -20,10 +20,12 @@ interface ExistingProductImage {
   url: string;
 }
 
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatIconModule],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -33,14 +35,32 @@ export class ProductDetail implements OnDestroy, OnInit {
   isEditing = signal(false);
   menuOpen = signal(false);
   currentImageIndex = 0;
-  editName = '';
-  editDescription = '';
-  editPrice = 0;
-  editQuantity = 1;
   existingEditImages = signal<ExistingProductImage[]>([]);
   selectedEditImages = signal<SelectedProductImage[]>([]);
   imageSelectionChanged = signal(false);
   isSaving = signal(false);
+
+  editForm = new FormGroup({
+    name: new FormControl('', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+    ]),
+    description: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(500),
+    ]),
+    price: new FormControl<number | null>(null, [
+      Validators.required,
+      Validators.min(0.01),
+      Validators.max(1000000),
+    ]),
+    quantity: new FormControl<number>(1, [
+      Validators.required,
+      Validators.min(1),
+      Validators.max(1000000),
+    ]),
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -103,15 +123,32 @@ export class ProductDetail implements OnDestroy, OnInit {
   onEditImagesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
-
     input.value = '';
+
     if (files.length === 0) return;
 
-    this.selectedEditImages.update((images) => [
-      ...images,
-      ...files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
-    ]);
-    this.imageSelectionChanged.set(true);
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        this.notifications.error(`"${file.name}" is not an image file (image/*).`);
+        continue;
+      }
+
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        this.notifications.error(`"${file.name}" exceeds 2 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length > 0) {
+      this.selectedEditImages.update((images) => [
+        ...images,
+        ...validFiles.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+      ]);
+      this.imageSelectionChanged.set(true);
+    }
   }
 
   removeExistingEditImage(index: number): void {
@@ -141,10 +178,12 @@ export class ProductDetail implements OnDestroy, OnInit {
 
     this.closeMenu();
     this.clearEditImagePreviews();
-    this.editName = current.name;
-    this.editDescription = current.description;
-    this.editPrice = current.price;
-    this.editQuantity = current.quantity ?? 1;
+    this.editForm.patchValue({
+      name: current.name,
+      description: current.description,
+      price: current.price,
+      quantity: current.quantity ?? 1,
+    });
     this.existingEditImages.set(
       (current.imageUrls ?? []).map((url) => ({
         id: url.substring(url.lastIndexOf('/') + 1),
@@ -158,30 +197,26 @@ export class ProductDetail implements OnDestroy, OnInit {
     const current = this.product();
     if (!current || this.isSaving()) return;
 
-    const name = this.editName.trim();
-    const description = this.editDescription.trim();
-    const validationErrors: string[] = [];
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      const validationErrors: string[] = [];
+      const n = this.editForm.controls.name;
+      if (n.errors?.['required'] || n.errors?.['minlength'] || n.errors?.['maxlength']) {
+        validationErrors.push('Product name must be between 2 and 50 characters.');
+      }
+      const d = this.editForm.controls.description;
+      if (d.errors?.['required'] || d.errors?.['maxlength']) {
+        validationErrors.push('Product description is required (up to 500 characters).');
+      }
+      const p = this.editForm.controls.price;
+      if (p.errors?.['required'] || p.errors?.['min'] || p.errors?.['max']) {
+        validationErrors.push('Price must be between €0.01 and €1,000,000.');
+      }
+      const q = this.editForm.controls.quantity;
+      if (q.errors?.['required'] || q.errors?.['min'] || q.errors?.['max']) {
+        validationErrors.push('Quantity must be between 1 and 1,000,000.');
+      }
 
-    if (name.length < 2 || name.length > 50) {
-      validationErrors.push('Product name must be between 2 and 50 characters.');
-    }
-    if (!description) {
-      validationErrors.push('Product description is required.');
-    } else if (description.length > 500) {
-      validationErrors.push('Product description cannot exceed 500 characters.');
-    }
-    if (!Number.isFinite(this.editPrice) || this.editPrice < 0.01 || this.editPrice > 1_000_000) {
-      validationErrors.push('Price must be between €0.01 and €1,000,000.');
-    }
-    if (
-      !Number.isInteger(this.editQuantity) ||
-      this.editQuantity < 1 ||
-      this.editQuantity > 1_000_000
-    ) {
-      validationErrors.push('Quantity must be between 1 and 1,000,000.');
-    }
-
-    if (validationErrors.length > 0) {
       this.notifications.error(validationErrors.join(' '));
       return;
     }
@@ -207,11 +242,12 @@ export class ProductDetail implements OnDestroy, OnInit {
       ...this.existingEditImages().map(({ id }) => id),
       ...(uploadedImages ?? []).map(({ id }) => id),
     ];
+    const formVal = this.editForm.value;
     const update = {
-      name: this.editName.trim(),
-      description: this.editDescription.trim(),
-      price: this.editPrice,
-      quantity: this.editQuantity,
+      name: formVal.name!.trim(),
+      description: formVal.description!.trim(),
+      price: Number(formVal.price),
+      quantity: Number(formVal.quantity) || 1,
       ...(this.imageSelectionChanged() ? { imageIds } : {}),
     };
 

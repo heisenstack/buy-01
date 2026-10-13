@@ -11,6 +11,8 @@
           <mat-icon aria-hidden="true">dashboard</mat-icon>
           Dashboard
         </a>
+      }
+      @if (authService.isAuthenticated()) {
         <a routerLink="/profile">
           <mat-icon aria-hidden="true">person</mat-icon>
           Profile

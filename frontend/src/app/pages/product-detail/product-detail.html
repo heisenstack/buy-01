@@ -138,14 +138,13 @@
           </div>
 
           <p class="editor-intro">Make changes to your listing details below.</p>
-          <form class="editor-form" (ngSubmit)="saveEdit()">
+          <form class="editor-form" [formGroup]="editForm" (ngSubmit)="saveEdit()">
             <div class="editor-field">
               <label for="edit-name">Product name</label>
               <input
                 id="edit-name"
                 type="text"
-                [(ngModel)]="editName"
-                name="editName"
+                formControlName="name"
                 required
                 minlength="2"
                 maxlength="50"
@@ -156,15 +155,14 @@
               <label for="edit-description">Description</label>
               <textarea
                 id="edit-description"
-                [(ngModel)]="editDescription"
-                name="editDescription"
+                formControlName="description"
                 required
                 maxlength="500"
               ></textarea>
             </div>
 
             <div class="editor-field image-editor-field">
-              <label>Product photos</label>
+              <label>Product photos (max 2 MB each, image/*)</label>
               <p class="image-editor-hint">Remove photos with × or add more with +.</p>
               <div class="current-image-grid">
                 @for (image of existingEditImages(); track image.id; let index = $index) {
@@ -215,8 +213,7 @@
                 <input
                   id="edit-price"
                   type="number"
-                  [(ngModel)]="editPrice"
-                  name="editPrice"
+                  formControlName="price"
                   min="0.01"
                   max="1000000"
                   step="0.01"
@@ -229,8 +226,7 @@
                 <input
                   id="edit-quantity"
                   type="number"
-                  [(ngModel)]="editQuantity"
-                  name="editQuantity"
+                  formControlName="quantity"
                   min="1"
                   max="1000000"
                   step="1"

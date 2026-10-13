@@ -51,42 +51,41 @@
           </div>
 
           @if (isEditing()) {
-            <form class="profile-form" (ngSubmit)="saveProfile()">
-              <div class="field-group" [class.has-error]="fieldErrors()['username']">
+            <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+              <div class="field-group" [class.has-error]="fieldErrors()['username'] || (profileForm.controls.username.invalid && profileForm.controls.username.touched)">
                 <label for="username">Username</label>
                 <input
                   id="username"
                   type="text"
-                  [(ngModel)]="usernameInput"
-                  name="username"
+                  formControlName="username"
                   placeholder="Your username"
-                  minlength="2"
-                  maxlength="50"
-                  pattern="[A-Za-z0-9]+"
-                  [class.invalid]="fieldErrors()['username']"
+                  [class.invalid]="fieldErrors()['username'] || (profileForm.controls.username.invalid && profileForm.controls.username.touched)"
                   (input)="clearFieldError('username')"
+                  required
                 />
               </div>
 
-              <div class="field-group">
-                <label for="profile-avatar-input">Avatar</label>
-                <label class="file-picker" for="profile-avatar-input">
-                  <input
-                    id="profile-avatar-input"
-                    type="file"
-                    accept="image/*"
-                    (change)="onFileSelected($event)"
-                  />
-                  <span>{{ selectedFile ? selectedFile.name : 'Choose a new photo' }}</span>
-                </label>
+              @if (p.role === 'SELLER') {
+                <div class="field-group">
+                  <label for="profile-avatar-input">Avatar (max 2 MB, image/*)</label>
+                  <label class="file-picker" for="profile-avatar-input">
+                    <input
+                      id="profile-avatar-input"
+                      type="file"
+                      accept="image/*"
+                      (change)="onFileSelected($event)"
+                    />
+                    <span>{{ selectedFile ? selectedFile.name : 'Choose a new photo' }}</span>
+                  </label>
 
-                @if (selectedAvatarPreview) {
-                  <div class="avatar-preview-box">
-                    <span class="mini-label">New avatar preview</span>
-                    <img [src]="selectedAvatarPreview" alt="New avatar preview" />
-                  </div>
-                }
-              </div>
+                  @if (selectedAvatarPreview) {
+                    <div class="avatar-preview-box">
+                      <span class="mini-label">New avatar preview</span>
+                      <img [src]="selectedAvatarPreview" alt="New avatar preview" />
+                    </div>
+                  }
+                </div>
+              }
 
               <div class="form-actions">
                 <button type="submit" class="primary-btn" [disabled]="submitting()">

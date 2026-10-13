@@ -11,88 +11,111 @@
     </p>
   </div>
 
-  <form class="auth-form" (ngSubmit)="submit()">
-    @if (mode() === 'register') {
-      <div class="form-row" [class.has-error]="fieldErrors()['username']">
+  @if (mode() === 'login') {
+    <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="submit()">
+      <div class="form-row" [class.has-error]="fieldErrors()['email'] || (loginForm.controls.email.invalid && loginForm.controls.email.touched)">
+        <label>Email</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="name@email.com"
+          [class.invalid]="fieldErrors()['email'] || (loginForm.controls.email.invalid && loginForm.controls.email.touched)"
+          (input)="clearFieldError('email')"
+          required
+        />
+      </div>
+
+      <div class="form-row" [class.has-error]="fieldErrors()['password'] || (loginForm.controls.password.invalid && loginForm.controls.password.touched)">
+        <label>Password</label>
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.invalid]="fieldErrors()['password'] || (loginForm.controls.password.invalid && loginForm.controls.password.touched)"
+          (input)="clearFieldError('password')"
+          required
+        />
+      </div>
+
+      <div class="auth-actions">
+        <button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Signing in...' : 'Sign in' }}
+        </button>
+
+        <button
+          type="button"
+          class="secondary auth-switch"
+          (click)="toggleMode()"
+          [disabled]="isSubmitting()"
+        >
+          Need an account? Register
+        </button>
+      </div>
+    </form>
+  } @else {
+    <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="submit()">
+      <div class="form-row" [class.has-error]="fieldErrors()['username'] || (registerForm.controls.username.invalid && registerForm.controls.username.touched)">
         <label>Username</label>
         <input
           type="text"
-          [(ngModel)]="username"
-          name="username"
+          formControlName="username"
           placeholder="Enter your username"
-          minlength="2"
-          maxlength="15"
-          pattern="[A-Za-z0-9]+"
-          [class.invalid]="fieldErrors()['username']"
+          [class.invalid]="fieldErrors()['username'] || (registerForm.controls.username.invalid && registerForm.controls.username.touched)"
           (input)="clearFieldError('username')"
           required
         />
       </div>
-    }
 
-    <div class="form-row" [class.has-error]="fieldErrors()['email']">
-      <label>Email</label>
-      <input
-        type="email"
-        [(ngModel)]="email"
-        name="email"
-        placeholder="name@email.com"
-        maxlength="20"
-        [class.invalid]="fieldErrors()['email']"
-        (input)="clearFieldError('email')"
-        required
-      />
-    </div>
+      <div class="form-row" [class.has-error]="fieldErrors()['email'] || (registerForm.controls.email.invalid && registerForm.controls.email.touched)">
+        <label>Email</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="name@email.com"
+          [class.invalid]="fieldErrors()['email'] || (registerForm.controls.email.invalid && registerForm.controls.email.touched)"
+          (input)="clearFieldError('email')"
+          required
+        />
+      </div>
 
-    <div class="form-row" [class.has-error]="fieldErrors()['password']">
-      <label>Password</label>
-      <input
-        type="password"
-        [(ngModel)]="password"
-        name="password"
-        placeholder="••••••••"
-        [class.invalid]="fieldErrors()['password']"
-        (input)="clearFieldError('password')"
-        required
-      />
-    </div>
+      <div class="form-row" [class.has-error]="fieldErrors()['password'] || (registerForm.controls.password.invalid && registerForm.controls.password.touched)">
+        <label>Password</label>
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.invalid]="fieldErrors()['password'] || (registerForm.controls.password.invalid && registerForm.controls.password.touched)"
+          (input)="clearFieldError('password')"
+          required
+        />
+      </div>
 
-    @if (mode() === 'register') {
-      <div class="form-row" [class.has-error]="fieldErrors()['role']">
+      <div class="form-row" [class.has-error]="fieldErrors()['role'] || (registerForm.controls.role.invalid && registerForm.controls.role.touched)">
         <label>I am a</label>
         <select
-          [(ngModel)]="role"
-          name="role"
-          [class.invalid]="fieldErrors()['role']"
+          formControlName="role"
+          [class.invalid]="fieldErrors()['role'] || (registerForm.controls.role.invalid && registerForm.controls.role.touched)"
           (change)="clearFieldError('role')"
         >
           <option value="CLIENT">Client</option>
           <option value="SELLER">Seller</option>
         </select>
       </div>
-    }
 
-    <div class="auth-actions">
-      <button type="submit" [disabled]="isSubmitting()">
-        {{
-          isSubmitting()
-            ? mode() === 'login'
-              ? 'Signing in...'
-              : 'Creating account...'
-            : mode() === 'login'
-              ? 'Sign in'
-              : 'Create account'
-        }}
-      </button>
+      <div class="auth-actions">
+        <button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Creating account...' : 'Create account' }}
+        </button>
 
-      <button
-        type="button"
-        class="secondary auth-switch"
-        (click)="toggleMode()"
-        [disabled]="isSubmitting()"
-      >
-        {{ mode() === 'login' ? 'Need an account? Register' : 'Already have an account? Login' }}
-      </button>
-    </div>
-  </form>
+        <button
+          type="button"
+          class="secondary auth-switch"
+          (click)="toggleMode()"
+          [disabled]="isSubmitting()"
+        >
+          Already have an account? Login
+        </button>
+      </div>
+    </form>
+  }
 </div>

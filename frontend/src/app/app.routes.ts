@@ -6,12 +6,13 @@ import { Profile } from './pages/profile/profile';
 import { ProductDetail } from './pages/product-detail/product-detail';
 import { sellerGuard } from './guards/seller-guard';
 import { loginGuard } from './guards/login-guard';
+import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
   { path: '', component: ProductList },
   { path: 'login', component: LoginPage, canActivate: [loginGuard] },
   { path: 'dashboard', component: Dashboard, canActivate: [sellerGuard] },
-  { path: 'profile', component: Profile, canActivate: [sellerGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'products/:id', component: ProductDetail },
   { path: '**', redirectTo: '' }
 ];
