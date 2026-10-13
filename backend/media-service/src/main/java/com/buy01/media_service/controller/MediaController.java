@@ -4,6 +4,7 @@ import com.buy01.media_service.model.Media;
 import com.buy01.media_service.repository.MediaRepository;
 import com.buy01.media_service.service.CloudinaryStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -30,23 +31,29 @@ public class MediaController {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
         }
 
+        String lowerFilename = file.getOriginalFilename().toLowerCase();
+        if (!lowerFilename.endsWith(".jpg") && !lowerFilename.endsWith(".jpeg") && !lowerFilename.endsWith(".png")
+                && !lowerFilename.endsWith(".gif") && !lowerFilename.endsWith(".webp") && !lowerFilename.endsWith(".bmp")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File extension not supported. Allowed: .jpg, .jpeg, .png, .gif, .webp, .bmp"));
+        }
+
         // Validate MIME type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             return ResponseEntity.badRequest().body(Map.of("error", "Only image files are allowed (image/*)"));
         }
-        
+
         // Validate file size (2 MB)
         if (file.getSize() > MAX_SIZE_BYTES) {
             return ResponseEntity.badRequest().body(Map.of("error", "File size must not exceed 2 MB"));
         }
-        System.out.println("Uploading file: " + file.getOriginalFilename() + ", size: " + file.getSize() + " bytes, contentType: " + contentType);
+
         // Upload to Cloudinary and save metadata
         try {
             Map<String, Object> uploadResult = cloudinaryStorageService.upload(file);
             String secureUrl = (String) uploadResult.get("secure_url");
             String publicId = (String) uploadResult.get("public_id");
-            System.out.println("Uploaded to Cloudinary: " + secureUrl + ", public_id: " + publicId);
+
             Media media = new Media(
                     file.getOriginalFilename(),
                     contentType,
@@ -77,8 +84,9 @@ public class MediaController {
         }
 
         Media media = mediaOpt.get();
-        // Redirect client directly to the hosted Cloudinary URL (302 Found)
+        // Redirect client to the hosted Cloudinary URL with caching headers (24h)
         return ResponseEntity.status(302)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
                 .location(URI.create(media.getUrl()))
                 .build();
     }

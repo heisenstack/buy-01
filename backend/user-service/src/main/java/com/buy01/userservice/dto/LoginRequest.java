@@ -14,7 +14,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be a valid address")
-    @Size(max = 20, message = "Email cannot exceed 20 characters.")
+    @Size(max = 50, message = "Email cannot exceed 50 characters.")
     private String email;
 
     @NotBlank(message = "Password is required")
