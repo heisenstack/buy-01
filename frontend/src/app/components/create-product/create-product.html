@@ -6,7 +6,14 @@
     </div>
 
     @if (mode === 'modal') {
-      <button type="button" class="close-button" aria-label="Close product form" (click)="closeForm()">×</button>
+      <button
+        type="button"
+        class="close-button"
+        aria-label="Close product form"
+        (click)="closeForm()"
+      >
+        ×
+      </button>
     }
   </div>
 
@@ -18,9 +25,12 @@
         [(ngModel)]="name"
         name="name"
         placeholder="e.g. Handmade Ceramic Mug"
+        minlength="2"
+        maxlength="50"
         [class.invalid]="fieldErrors()['name']"
         (input)="clearFieldError('name')"
-        required>
+        required
+      />
     </div>
 
     <div class="field-group" [class.has-error]="fieldErrors()['description']">
@@ -29,9 +39,11 @@
         [(ngModel)]="description"
         name="description"
         placeholder="Describe the piece..."
+        maxlength="500"
         [class.invalid]="fieldErrors()['description']"
         (input)="clearFieldError('description')"
-        required></textarea>
+        required
+      ></textarea>
     </div>
 
     <div class="two-column-fields">
@@ -44,7 +56,10 @@
           placeholder="0.00"
           [class.invalid]="fieldErrors()['price']"
           (input)="clearFieldError('price')"
-          required min="0" step="0.01">
+          required
+          min="0"
+          step="0.01"
+        />
       </div>
 
       <div class="field-group" [class.has-error]="fieldErrors()['quantity']">
@@ -56,23 +71,39 @@
           placeholder="1"
           [class.invalid]="fieldErrors()['quantity']"
           (input)="clearFieldError('quantity')"
-          required min="1" step="1">
+          required
+          min="1"
+          step="1"
+        />
       </div>
     </div>
 
     <div class="field-group">
       <label>Photos</label>
       <label class="upload-box" for="product-image-upload">
-        <span class="upload-text">{{ selectedImages().length ? 'Add more images' : 'Choose images' }}</span>
+        <span class="upload-text">{{
+          selectedImages().length ? 'Add more images' : 'Choose images'
+        }}</span>
         <span class="upload-button">Browse</span>
       </label>
-      <input id="product-image-upload" type="file" accept="image/*" multiple (change)="onFilesSelected($event)">
+      <input
+        id="product-image-upload"
+        type="file"
+        accept="image/*"
+        multiple
+        (change)="onFilesSelected($event)"
+      />
       @if (selectedImages().length > 0) {
         <div class="image-preview-grid">
           @for (image of selectedImages(); track image.previewUrl; let index = $index) {
             <div class="image-preview">
-              <img [src]="image.previewUrl" [alt]="image.file.name">
-              <button type="button" class="remove-image" [attr.aria-label]="'Remove ' + image.file.name" (click)="removeImage(index)">
+              <img [src]="image.previewUrl" [alt]="image.file.name" />
+              <button
+                type="button"
+                class="remove-image"
+                [attr.aria-label]="'Remove ' + image.file.name"
+                (click)="removeImage(index)"
+              >
                 <mat-icon aria-hidden="true">close</mat-icon>
               </button>
               <span>{{ image.file.name }}</span>
@@ -92,5 +123,4 @@
       }
     </div>
   </form>
-
 </div>

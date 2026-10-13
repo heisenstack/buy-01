@@ -18,7 +18,7 @@ interface SelectedImage {
   standalone: true,
   imports: [FormsModule, CommonModule, MatIconModule],
   templateUrl: './create-product.html',
-  styleUrl: './create-product.css'
+  styleUrl: './create-product.css',
 })
 export class CreateProduct implements OnDestroy {
   @Input() mode: 'inline' | 'modal' = 'inline';
@@ -36,7 +36,7 @@ export class CreateProduct implements OnDestroy {
   constructor(
     private productService: ProductService,
     private mediaService: MediaService,
-    private notifications: NotificationService
+    private notifications: NotificationService,
   ) {}
 
   ngOnDestroy(): void {
@@ -49,7 +49,7 @@ export class CreateProduct implements OnDestroy {
     if (files.length > 0) {
       this.selectedImages.update((images) => [
         ...images,
-        ...files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))
+        ...files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
       ]);
       this.clearFieldError('image');
     }
@@ -88,7 +88,7 @@ export class CreateProduct implements OnDestroy {
           const message = extractErrorMessage(err, 'Image upload failed.');
           this.notifications.error(message);
           this.isSubmitting.set(false);
-        }
+        },
       });
     } else {
       this.createProduct([]);
@@ -102,12 +102,19 @@ export class CreateProduct implements OnDestroy {
   private validateForm(): Record<string, string> {
     const errors: Record<string, string> = {};
 
-    if (!this.name.trim()) {
+    const name = this.name.trim();
+    const description = this.description.trim();
+
+    if (!name) {
       errors['name'] = 'Name is required.';
+    } else if (name.length < 2 || name.length > 50) {
+      errors['name'] = 'Product name must be between 2 and 50 characters.';
     }
 
-    if (!this.description.trim()) {
+    if (!description) {
       errors['description'] = 'Description is required.';
+    } else if (description.length > 500) {
+      errors['description'] = 'Description cannot exceed 500 characters.';
     }
 
     if (this.price === null || this.price === undefined || Number(this.price) <= 0) {
@@ -144,7 +151,11 @@ export class CreateProduct implements OnDestroy {
 
     if (body && typeof body === 'object') {
       Object.entries(body).forEach(([key, value]) => {
-        if (['name', 'description', 'price', 'quantity'].includes(key) && typeof value === 'string' && value.trim()) {
+        if (
+          ['name', 'description', 'price', 'quantity'].includes(key) &&
+          typeof value === 'string' &&
+          value.trim()
+        ) {
           mapped[key] = value;
         }
       });
@@ -156,28 +167,30 @@ export class CreateProduct implements OnDestroy {
   }
 
   private createProduct(imageIds: string[]): void {
-    this.productService.create({
-      name: this.name,
-      description: this.description,
-      price: this.price,
-      quantity: this.quantity,
-      imageIds
-    }).subscribe({
-      next: () => {
-        this.notifications.success('Product created successfully.');
-        this.productCreated.emit();
-        if (this.mode === 'modal') {
-          this.closed.emit();
-        }
-        this.resetForm();
-        this.isSubmitting.set(false);
-      },
-      error: (err) => {
-        this.applyServerFieldErrors(err);
-        const message = extractErrorMessage(err, 'Product creation failed.');
-        this.notifications.error(message);
-        this.isSubmitting.set(false);
-      }
-    });
+    this.productService
+      .create({
+        name: this.name,
+        description: this.description,
+        price: this.price,
+        quantity: this.quantity,
+        imageIds,
+      })
+      .subscribe({
+        next: () => {
+          this.notifications.success('Product created successfully.');
+          this.productCreated.emit();
+          if (this.mode === 'modal') {
+            this.closed.emit();
+          }
+          this.resetForm();
+          this.isSubmitting.set(false);
+        },
+        error: (err) => {
+          this.applyServerFieldErrors(err);
+          const message = extractErrorMessage(err, 'Product creation failed.');
+          this.notifications.error(message);
+          this.isSubmitting.set(false);
+        },
+      });
   }
 }

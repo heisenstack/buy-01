@@ -12,7 +12,7 @@ import { extractErrorMessage } from '../../utils/error-message';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './profile.html',
-  styleUrl: './profile.css'
+  styleUrl: './profile.css',
 })
 export class Profile implements OnInit {
   profile = signal<UserProfile | null>(null);
@@ -28,7 +28,7 @@ export class Profile implements OnInit {
     private authService: AuthService,
     private mediaService: MediaService,
     private productService: ProductService,
-    private notifications: NotificationService
+    private notifications: NotificationService,
   ) {}
 
   get currentAvatarUrl(): string | null {
@@ -52,7 +52,7 @@ export class Profile implements OnInit {
       error: (err) => {
         this.notifications.error(extractErrorMessage(err, 'Failed to load profile.'));
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -86,6 +86,10 @@ export class Profile implements OnInit {
       errors['username'] = 'Username is required.';
     } else if (username.length < 2) {
       errors['username'] = 'Username must be at least 2 characters.';
+    } else if (username.length > 50) {
+      errors['username'] = 'Username cannot exceed 50 characters.';
+    } else if (!/^[A-Za-z0-9]+$/.test(username)) {
+      errors['username'] = 'Username can contain only letters and numbers.';
     }
 
     return errors;
@@ -159,7 +163,7 @@ export class Profile implements OnInit {
                 const message = `Profile updated, but product seller names could not be updated: ${extractErrorMessage(err, 'Please try again.')}`;
                 this.notifications.error(message);
                 this.submitting.set(false);
-              }
+              },
             });
           } else {
             this.notifications.success('Profile updated successfully.');
@@ -171,7 +175,7 @@ export class Profile implements OnInit {
           const message = extractErrorMessage(err, 'Failed to update profile.');
           this.notifications.error(message);
           this.submitting.set(false);
-        }
+        },
       });
     };
 
@@ -188,7 +192,7 @@ export class Profile implements OnInit {
         const message = extractErrorMessage(err, 'Avatar upload failed.');
         this.notifications.error(message);
         this.submitting.set(false);
-      }
+      },
     });
   }
 }

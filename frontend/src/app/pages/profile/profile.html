@@ -26,7 +26,6 @@
                 <div class="avatar-placeholder">{{ p.username.charAt(0).toUpperCase() }}</div>
               }
             </div>
-
           </div>
 
           <div class="summary-info">
@@ -45,7 +44,9 @@
             </div>
 
             @if (!isEditing()) {
-              <button type="button" class="primary-btn" (click)="startEditing()">Edit profile</button>
+              <button type="button" class="primary-btn" (click)="startEditing()">
+                Edit profile
+              </button>
             }
           </div>
 
@@ -59,14 +60,23 @@
                   [(ngModel)]="usernameInput"
                   name="username"
                   placeholder="Your username"
+                  minlength="2"
+                  maxlength="50"
+                  pattern="[A-Za-z0-9]+"
                   [class.invalid]="fieldErrors()['username']"
-                  (input)="clearFieldError('username')">
+                  (input)="clearFieldError('username')"
+                />
               </div>
 
               <div class="field-group">
                 <label for="profile-avatar-input">Avatar</label>
                 <label class="file-picker" for="profile-avatar-input">
-                  <input id="profile-avatar-input" type="file" accept="image/*" (change)="onFileSelected($event)">
+                  <input
+                    id="profile-avatar-input"
+                    type="file"
+                    accept="image/*"
+                    (change)="onFileSelected($event)"
+                  />
                   <span>{{ selectedFile ? selectedFile.name : 'Choose a new photo' }}</span>
                 </label>
 
@@ -82,7 +92,9 @@
                 <button type="submit" class="primary-btn" [disabled]="submitting()">
                   {{ submitting() ? 'Saving...' : 'Save changes' }}
                 </button>
-                <button type="button" class="secondary-btn" (click)="cancelEditing()">Cancel</button>
+                <button type="button" class="secondary-btn" (click)="cancelEditing()">
+                  Cancel
+                </button>
               </div>
             </form>
           } @else {
@@ -104,6 +116,5 @@
         </div>
       </div>
     }
-
   </div>
 </section>

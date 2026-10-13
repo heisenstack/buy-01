@@ -2,67 +2,97 @@
   <div class="auth-header">
     <p class="eyebrow">Account access</p>
     <h2>{{ mode() === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
-    <p>{{ mode() === 'login' ? 'Sign in to continue managing your listings and orders.' : 'Join the marketplace and start selling or shopping with confidence.' }}</p>
+    <p>
+      {{
+        mode() === 'login'
+          ? 'Sign in to continue managing your listings and orders.'
+          : 'Join the marketplace and start selling or shopping with confidence.'
+      }}
+    </p>
   </div>
 
   <form class="auth-form" (ngSubmit)="submit()">
-      @if (mode() === 'register') {
-        <div class="form-row" [class.has-error]="fieldErrors()['username']">
-          <label>Username</label>
-          <input
-            type="text"
-            [(ngModel)]="username"
-            name="username"
-            placeholder="Enter your username"
-            [class.invalid]="fieldErrors()['username']"
-            (input)="clearFieldError('username')"
-            required>
-        </div>
-      }
-
-      <div class="form-row" [class.has-error]="fieldErrors()['email']">
-        <label>Email</label>
+    @if (mode() === 'register') {
+      <div class="form-row" [class.has-error]="fieldErrors()['username']">
+        <label>Username</label>
         <input
-          type="email"
-          [(ngModel)]="email"
-          name="email"
-          placeholder="name@email.com"
-          [class.invalid]="fieldErrors()['email']"
-          (input)="clearFieldError('email')"
-          required>
+          type="text"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="Enter your username"
+          minlength="2"
+          maxlength="15"
+          pattern="[A-Za-z0-9]+"
+          [class.invalid]="fieldErrors()['username']"
+          (input)="clearFieldError('username')"
+          required
+        />
       </div>
+    }
 
-      <div class="form-row" [class.has-error]="fieldErrors()['password']">
-        <label>Password</label>
-        <input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="••••••••"
-          [class.invalid]="fieldErrors()['password']"
-          (input)="clearFieldError('password')"
-          required>
+    <div class="form-row" [class.has-error]="fieldErrors()['email']">
+      <label>Email</label>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        name="email"
+        placeholder="name@email.com"
+        maxlength="20"
+        [class.invalid]="fieldErrors()['email']"
+        (input)="clearFieldError('email')"
+        required
+      />
+    </div>
+
+    <div class="form-row" [class.has-error]="fieldErrors()['password']">
+      <label>Password</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        name="password"
+        placeholder="••••••••"
+        [class.invalid]="fieldErrors()['password']"
+        (input)="clearFieldError('password')"
+        required
+      />
+    </div>
+
+    @if (mode() === 'register') {
+      <div class="form-row" [class.has-error]="fieldErrors()['role']">
+        <label>I am a</label>
+        <select
+          [(ngModel)]="role"
+          name="role"
+          [class.invalid]="fieldErrors()['role']"
+          (change)="clearFieldError('role')"
+        >
+          <option value="CLIENT">Client</option>
+          <option value="SELLER">Seller</option>
+        </select>
       </div>
+    }
 
-      @if (mode() === 'register') {
-        <div class="form-row" [class.has-error]="fieldErrors()['role']">
-          <label>I am a</label>
-          <select [(ngModel)]="role" name="role" [class.invalid]="fieldErrors()['role']" (change)="clearFieldError('role')">
-            <option value="CLIENT">Client</option>
-            <option value="SELLER">Seller</option>
-          </select>
-        </div>
-      }
+    <div class="auth-actions">
+      <button type="submit" [disabled]="isSubmitting()">
+        {{
+          isSubmitting()
+            ? mode() === 'login'
+              ? 'Signing in...'
+              : 'Creating account...'
+            : mode() === 'login'
+              ? 'Sign in'
+              : 'Create account'
+        }}
+      </button>
 
-      <div class="auth-actions">
-        <button type="submit" [disabled]="isSubmitting()">
-          {{ isSubmitting() ? (mode() === 'login' ? 'Signing in...' : 'Creating account...') : (mode() === 'login' ? 'Sign in' : 'Create account') }}
-        </button>
-
-        <button type="button" class="secondary auth-switch" (click)="toggleMode()" [disabled]="isSubmitting()">
-          {{ mode() === 'login' ? "Need an account? Register" : 'Already have an account? Login' }}
-        </button>
-      </div>
+      <button
+        type="button"
+        class="secondary auth-switch"
+        (click)="toggleMode()"
+        [disabled]="isSubmitting()"
+      >
+        {{ mode() === 'login' ? 'Need an account? Register' : 'Already have an account? Login' }}
+      </button>
+    </div>
   </form>
-
 </div>

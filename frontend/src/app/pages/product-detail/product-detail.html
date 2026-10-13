@@ -141,7 +141,15 @@
           <form class="editor-form" (ngSubmit)="saveEdit()">
             <div class="editor-field">
               <label for="edit-name">Product name</label>
-              <input id="edit-name" type="text" [(ngModel)]="editName" name="editName" />
+              <input
+                id="edit-name"
+                type="text"
+                [(ngModel)]="editName"
+                name="editName"
+                required
+                minlength="2"
+                maxlength="50"
+              />
             </div>
 
             <div class="editor-field">
@@ -150,6 +158,8 @@
                 id="edit-description"
                 [(ngModel)]="editDescription"
                 name="editDescription"
+                required
+                maxlength="500"
               ></textarea>
             </div>
 
@@ -208,7 +218,9 @@
                   [(ngModel)]="editPrice"
                   name="editPrice"
                   min="0.01"
+                  max="1000000"
                   step="0.01"
+                  required
                 />
               </div>
 
@@ -220,7 +232,9 @@
                   [(ngModel)]="editQuantity"
                   name="editQuantity"
                   min="1"
+                  max="1000000"
                   step="1"
+                  required
                 />
               </div>
             </div>

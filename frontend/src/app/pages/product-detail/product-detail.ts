@@ -158,6 +158,34 @@ export class ProductDetail implements OnDestroy, OnInit {
     const current = this.product();
     if (!current || this.isSaving()) return;
 
+    const name = this.editName.trim();
+    const description = this.editDescription.trim();
+    const validationErrors: string[] = [];
+
+    if (name.length < 2 || name.length > 50) {
+      validationErrors.push('Product name must be between 2 and 50 characters.');
+    }
+    if (!description) {
+      validationErrors.push('Product description is required.');
+    } else if (description.length > 500) {
+      validationErrors.push('Product description cannot exceed 500 characters.');
+    }
+    if (!Number.isFinite(this.editPrice) || this.editPrice < 0.01 || this.editPrice > 1_000_000) {
+      validationErrors.push('Price must be between €0.01 and €1,000,000.');
+    }
+    if (
+      !Number.isInteger(this.editQuantity) ||
+      this.editQuantity < 1 ||
+      this.editQuantity > 1_000_000
+    ) {
+      validationErrors.push('Quantity must be between 1 and 1,000,000.');
+    }
+
+    if (validationErrors.length > 0) {
+      this.notifications.error(validationErrors.join(' '));
+      return;
+    }
+
     this.isSaving.set(true);
     const images = this.selectedEditImages();
     if (images.length > 0) {
@@ -180,8 +208,8 @@ export class ProductDetail implements OnDestroy, OnInit {
       ...(uploadedImages ?? []).map(({ id }) => id),
     ];
     const update = {
-      name: this.editName,
-      description: this.editDescription,
+      name: this.editName.trim(),
+      description: this.editDescription.trim(),
       price: this.editPrice,
       quantity: this.editQuantity,
       ...(this.imageSelectionChanged() ? { imageIds } : {}),

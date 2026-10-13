@@ -11,7 +11,7 @@ import { extractErrorMessage } from '../../utils/error-message';
   standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './auth.html',
-  styleUrl: './auth.css'
+  styleUrl: './auth.css',
 })
 export class Auth {
   mode = signal<'login' | 'register'>('login');
@@ -25,7 +25,7 @@ export class Auth {
   constructor(
     public authService: AuthService,
     private router: Router,
-    private notifications: NotificationService
+    private notifications: NotificationService,
   ) {}
 
   toggleMode(): void {
@@ -46,6 +46,8 @@ export class Auth {
 
     if (!this.email.trim()) {
       errors['email'] = 'Email is required.';
+    } else if (this.email.trim().length > 20) {
+      errors['email'] = 'Email cannot exceed 20 characters.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
       errors['email'] = 'Enter a valid email address.';
     }
@@ -64,10 +66,16 @@ export class Auth {
       errors['username'] = 'Username is required.';
     } else if (this.username.trim().length < 2) {
       errors['username'] = 'Username must be at least 2 characters.';
+    } else if (this.username.trim().length > 15) {
+      errors['username'] = 'Username cannot exceed 15 characters.';
+    } else if (!/^[A-Za-z0-9]+$/.test(this.username.trim())) {
+      errors['username'] = 'Username can contain only letters and numbers.';
     }
 
     if (!this.email.trim()) {
       errors['email'] = 'Email is required.';
+    } else if (this.email.trim().length > 20) {
+      errors['email'] = 'Email cannot exceed 20 characters.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
       errors['email'] = 'Enter a valid email address.';
     }
@@ -87,7 +95,11 @@ export class Auth {
 
     if (body && typeof body === 'object') {
       Object.entries(body).forEach(([key, value]) => {
-        if (['username', 'email', 'password', 'role'].includes(key) && typeof value === 'string' && value.trim()) {
+        if (
+          ['username', 'email', 'password', 'role'].includes(key) &&
+          typeof value === 'string' &&
+          value.trim()
+        ) {
           mapped[key] = value;
         }
       });
@@ -123,22 +135,24 @@ export class Auth {
           const message = extractErrorMessage(err, 'Login failed. Please check your credentials.');
           this.notifications.error(message);
           this.isSubmitting.set(false);
-        }
+        },
       });
     } else {
-      this.authService.register(this.username.trim(), this.email.trim(), this.password, this.role).subscribe({
-        next: () => {
-          this.notifications.success('Account created. You can now sign in.');
-          this.mode.set('login');
-          this.isSubmitting.set(false);
-        },
-        error: (err) => {
-          this.applyServerFieldErrors(err);
-          const message = extractErrorMessage(err, 'Registration failed. Please try again.');
-          this.notifications.error(message);
-          this.isSubmitting.set(false);
-        }
-      });
+      this.authService
+        .register(this.username.trim(), this.email.trim(), this.password, this.role)
+        .subscribe({
+          next: () => {
+            this.notifications.success('Account created. You can now sign in.');
+            this.mode.set('login');
+            this.isSubmitting.set(false);
+          },
+          error: (err) => {
+            this.applyServerFieldErrors(err);
+            const message = extractErrorMessage(err, 'Registration failed. Please try again.');
+            this.notifications.error(message);
+            this.isSubmitting.set(false);
+          },
+        });
     }
   }
 
