@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.apache.tika.Tika;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -20,9 +20,9 @@ import java.util.Map;
 public class MediaController {
 
     private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2 MB
+    private final Tika tika = new Tika();
 
     private final MediaRepository mediaRepository;
-
     private final CloudinaryStorageService cloudinaryStorageService;
 
     @PostMapping
@@ -31,7 +31,24 @@ public class MediaController {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
         }
 
-        String lowerFilename = file.getOriginalFilename().toLowerCase();
+        try {
+            String detectedMimeType = tika.detect(file.getInputStream());
+
+            if (detectedMimeType == null || !detectedMimeType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid file content. Real detected type: " + detectedMimeType));
+            }
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Could not read uploaded file stream"));
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File name is missing"));
+        }
+
+        String lowerFilename = originalFilename.toLowerCase();
+
         if (!lowerFilename.endsWith(".jpg") && !lowerFilename.endsWith(".jpeg") && !lowerFilename.endsWith(".png")
                 && !lowerFilename.endsWith(".gif") && !lowerFilename.endsWith(".webp") && !lowerFilename.endsWith(".bmp")) {
             return ResponseEntity.badRequest().body(Map.of("error", "File extension not supported. Allowed: .jpg, .jpeg, .png, .gif, .webp, .bmp"));
@@ -60,8 +77,7 @@ public class MediaController {
                     file.getSize(),
                     auth.getName(),
                     secureUrl,
-                    publicId
-            );
+                    publicId);
 
             Media saved = mediaRepository.save(media);
 
@@ -69,8 +85,7 @@ public class MediaController {
                     "id", saved.getId(),
                     "url", saved.getUrl(),
                     "filename", saved.getOriginalFilename(),
-                    "size", saved.getSize()
-            ));
+                    "size", saved.getSize()));
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to upload image to Cloudinary"));
         }

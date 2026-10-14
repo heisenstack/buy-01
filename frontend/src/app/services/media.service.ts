@@ -5,9 +5,8 @@ import { Observable } from 'rxjs';
 export interface MediaResponse {
   id: string;
   filename: string;
-  contentType: string;
+  url: string;
   size: number;
-  ownerEmail: string;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -18,6 +18,6 @@ public class UpdateProfileRequest {
     private String username;
 
     @Email(message = "Please enter a valid email address.")
-    @Size(max = 20, message = "Email cannot exceed 20 characters.")
+    @Size(max = 50, message = "Email cannot exceed 50 characters.")
     private String email;
 }
