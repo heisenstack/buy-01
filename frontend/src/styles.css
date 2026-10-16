@@ -713,14 +713,17 @@ nav .nav-links a:hover {
 }
 
 .editor-block .image-picker mat-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
-  align-self: center;
-  justify-self: center;
   width: 30px;
   height: 30px;
   margin: 0;
   font-size: 30px;
   line-height: 30px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 .editor-block .image-picker input[type='file'] {
